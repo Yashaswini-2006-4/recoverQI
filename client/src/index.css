@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary: 99 102 241;
+    --color-primary-dark: 79 70 229;
+    --color-secondary: 168 85 247;
+    --color-accent: 14 165 233;
+    --color-bg-dark: 15 23 42;
+    --color-card-dark: 30 41 59;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
+                #0b0f19;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism effects */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glow-blue {
+  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.3);
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
