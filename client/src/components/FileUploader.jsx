@@ -1,296 +1,482 @@
-import React, { useState, useRef } from 'react';
-import { scanImage } from '../services/api';
-import { UploadCloud, CheckCircle2, AlertTriangle, Loader2, Sparkles, Sliders, Play, Database } from 'lucide-react';
+import React, { useRef, useState } from "react";
+import {
+  Upload,
+  FileImage,
+  CheckCircle2,
+  Play,
+  Trash2,
+  Sparkles,
+  SlidersHorizontal,
+  Zap,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
-export default function FileUploader({ onScanComplete, isScanning, setIsScanning }) {
-  const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [scanMode, setScanMode] = useState('smart');
-  const [scanProgress, setScanProgress] = useState(0);
-  const [currentSector, setCurrentSector] = useState('0x00000000');
-  const [scanStatusMessage, setScanStatusMessage] = useState('Idle');
-  const [errorMessage, setErrorMessage] = useState(null);
+import { scanImage } from "../services/api";
+
+export default function FileUploader({
+  onScanComplete,
+  isScanning,
+  setIsScanning,
+}) {
   const fileInputRef = useRef(null);
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [scanMode, setScanMode] = useState("smart");
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelected(e.dataTransfer.files[0]);
-    }
-  };
+  const handleFileSelect = (file) => {
+    if (!file) return;
 
-  const handleChange = (e) => {
-    e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelected(e.target.files[0]);
-    }
-  };
-
-  const handleFileSelected = (file) => {
+    setError("");
     setSelectedFile(file);
-    setScanProgress(0);
-    setErrorMessage(null);
+    setProgress(0);
+  };
+
+  const handleInputChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleChooseFile = () => {
+    if (!isScanning) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleClearFile = () => {
+    if (isScanning) return;
+
+    setSelectedFile(null);
+    setProgress(0);
+    setError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB"];
+
+    const index = Math.floor(
+      Math.log(bytes) / Math.log(1024)
+    );
+
+    const size = bytes / Math.pow(1024, index);
+
+    return `${size.toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
   };
 
   const handleStartScan = async () => {
+    console.log("=== RecoverIQ Scan Started ===");
+
     if (!selectedFile) {
-      setErrorMessage("Please drop or select a disk image / dump file first.");
+      setError("Please select a file first.");
       return;
     }
 
+    if (!(selectedFile instanceof File)) {
+      setError("Invalid file. Please select the file again.");
+      return;
+    }
+
+    setError("");
     setIsScanning(true);
-    setScanProgress(0);
-    setErrorMessage(null);
-    setScanStatusMessage('Mounting virtual stream & invoking API scan engine...');
+    setProgress(5);
 
-    // Progress simulation while API call executes
-    let progress = 10;
+    console.log("Selected file:", selectedFile.name);
+    console.log("File size:", selectedFile.size);
+    console.log("Scan mode:", scanMode);
+
+    // Visual progress only.
     const progressTimer = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
-      if (progress > 90) progress = 90;
-      setScanProgress(progress);
-      const randomSector = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
-      setCurrentSector(randomSector);
+      setProgress((current) => {
+        if (current >= 90) {
+          clearInterval(progressTimer);
+          return current;
+        }
 
-      if (progress < 40) {
-        setScanStatusMessage('Parsing filesystem metadata (MFT / Inode Table)...');
-      } else if (progress < 75) {
-        setScanStatusMessage('Carving unallocated raw clusters with neural heuristics...');
-      } else {
-        setScanStatusMessage('Synthesizing recovery ledger & calculating checksums...');
-      }
-    }, 120);
+        return current + 10;
+      });
+    }, 150);
 
     try {
-      // Call mock API service
-      const apiResponse = await scanImage(selectedFile);
+      console.log("Sending file to RecoverIQ backend...");
+
+      const result = await scanImage(selectedFile);
+
+      console.log("Backend response:", result);
 
       clearInterval(progressTimer);
-      setScanProgress(100);
-      setScanStatusMessage('Scan analysis complete!');
 
-      setTimeout(() => {
-        setIsScanning(false);
-        if (onScanComplete) {
-          onScanComplete(apiResponse);
-        }
-      }, 500);
+      setProgress(100);
+
+      if (!result) {
+        throw new Error("Backend returned an empty response.");
+      }
+
+      // Give the UI a moment to show 100%.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      console.log("Updating dashboard with scan results...");
+
+      onScanComplete(result);
+
+      console.log("=== RecoverIQ Scan Completed ===");
     } catch (err) {
       clearInterval(progressTimer);
+
+      console.error("RecoverIQ scan error:", err);
+
+      setError(
+        err?.message ||
+          "Unable to complete the forensic scan."
+      );
+
+      setProgress(0);
+    } finally {
       setIsScanning(false);
-      setErrorMessage(err.message || "Failed to scan disk image.");
     }
   };
 
-  const loadDemoDiskImage = () => {
-    const demo = {
-      name: "corrupted_workstation_nvme_backup.img",
-      size: 4825000000,
-      type: "disk/raw-image"
-    };
-    setSelectedFile(demo);
-    setErrorMessage(null);
+  const createDemoFile = () => {
+    const demoContent =
+      "%PDF-1.4\n" +
+      "RecoverIQ forensic recovery test file\n" +
+      "This is a demo file used for API testing.\n" +
+      "%%EOF";
+
+    const demoFile = new File(
+      [demoContent],
+      "recoveriq_demo.pdf",
+      {
+        type: "application/pdf",
+      }
+    );
+
+    handleFileSelect(demoFile);
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-2xl relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 overflow-hidden shadow-xl">
 
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <UploadCloud className="w-6 h-6 text-sky-400" />
-              Source Image & Volume Ingestion
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Select or drop a raw disk dump, virtual disk image, or partition image to begin investigation.
-            </p>
-          </div>
+      {/* Header */}
+      <div className="p-6 border-b border-slate-800">
+        <div className="flex items-start justify-between gap-4">
 
-          {!selectedFile && (
-            <button
-              onClick={loadDemoDiskImage}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-sky-300 text-xs font-medium border border-sky-500/20 transition-all cursor-pointer"
-            >
-              <Database className="w-4 h-4 text-sky-400" />
-              Load Sample Disk Dump
-            </button>
-          )}
-        </div>
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
+              <Upload className="w-5 h-5" />
+            </div>
 
-        {/* Error notice */}
-        {errorMessage && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                Source Image & Volume Ingestion
+              </h2>
 
-        {/* Drag and Drop Zone */}
-        <div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${
-            dragActive
-              ? "border-sky-400 bg-sky-500/10 scale-[1.01]"
-              : selectedFile
-              ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/60"
-              : "border-slate-700/80 bg-slate-900/50 hover:border-slate-500 hover:bg-slate-800/40"
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleChange}
-          />
-
-          {selectedFile ? (
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <p className="text-sm font-semibold text-white mt-1">{selectedFile.name}</p>
-              <p className="text-xs text-slate-400">
-                {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for API scan engine
+              <p className="text-sm text-slate-400 mt-1">
+                Select or drop a disk image, raw file, or partition image
+                to begin recovery analysis.
               </p>
-              <span className="text-[11px] text-sky-400 underline mt-1">Click to replace file</span>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            RecoverIQ API
+          </div>
+
+        </div>
+      </div>
+
+      {/* Upload Area */}
+      <div className="p-6">
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleInputChange}
+          disabled={isScanning}
+        />
+
+        <div
+          onClick={handleChooseFile}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          className={`
+            min-h-[210px]
+            rounded-2xl
+            border-2
+            border-dashed
+            flex
+            items-center
+            justify-center
+            text-center
+            transition-all
+            ${
+              selectedFile
+                ? "border-emerald-500/60 bg-emerald-500/5"
+                : "border-cyan-500/40 bg-slate-950/30 hover:border-cyan-400/70 hover:bg-cyan-500/5"
+            }
+            ${isScanning ? "cursor-not-allowed" : "cursor-pointer"}
+          `}
+        >
+          {selectedFile ? (
+            <div className="flex flex-col items-center">
+
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              </div>
+
+              <h3 className="text-white font-semibold">
+                {selectedFile.name}
+              </h3>
+
+              <p className="text-sm text-slate-400 mt-1">
+                {formatFileSize(selectedFile.size)} • Ready for API scan
+              </p>
+
+              {!isScanning && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleChooseFile();
+                  }}
+                  className="mt-3 text-xs text-cyan-400 hover:text-cyan-300 underline"
+                >
+                  Click to replace file
+                </button>
+              )}
+
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <UploadCloud className="w-6 h-6" />
+            <div className="flex flex-col items-center">
+
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-4">
+                <Upload className="w-7 h-7 text-cyan-400" />
               </div>
-              <p className="text-sm font-semibold text-slate-200">
-                Drop your raw disk image (.img, .dd, .raw, .vmdk, .bin) here
+
+              <h3 className="text-white font-semibold">
+                Drop your recovery image here
+              </h3>
+
+              <p className="text-sm text-slate-400 mt-1">
+                or click to browse files
               </p>
-              <p className="text-xs text-slate-400">
-                Or click to browse from local workstation storage
+
+              <p className="text-xs text-slate-500 mt-3">
+                PDF, PNG, JPEG, RAW and disk images
               </p>
+
             </div>
           )}
         </div>
 
-        {/* Scan Mode Options */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div
-            onClick={() => setScanMode('smart')}
-            className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-              scanMode === 'smart'
-                ? 'bg-indigo-600/20 border-indigo-500/50 text-white shadow-sm'
-                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-            }`}
+        {/* Scan Modes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+
+          <button
+            type="button"
+            disabled={isScanning}
+            onClick={() => setScanMode("smart")}
+            className={`
+              text-left p-4 rounded-xl border transition-all
+              ${
+                scanMode === "smart"
+                  ? "border-indigo-500 bg-indigo-500/20"
+                  : "border-slate-800 bg-slate-950/40 hover:border-slate-700"
+              }
+            `}
           >
-            <div className="flex items-center gap-2 font-semibold text-xs mb-1 text-indigo-300">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <div className="flex items-center gap-2 text-indigo-300 font-semibold text-sm">
+              <Sparkles className="w-4 h-4" />
               Smart AI Carving
             </div>
-            <p className="text-[11px] text-slate-400">
-              Deep signature and fragmented header matching.
-            </p>
-          </div>
 
-          <div
-            onClick={() => setScanMode('deep')}
-            className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-              scanMode === 'deep'
-                ? 'bg-sky-600/20 border-sky-500/50 text-white shadow-sm'
-                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-            }`}
+            <p className="text-xs text-slate-400 mt-2">
+              Scan file signatures and identify recoverable files.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            disabled={isScanning}
+            onClick={() => setScanMode("deep")}
+            className={`
+              text-left p-4 rounded-xl border transition-all
+              ${
+                scanMode === "deep"
+                  ? "border-cyan-500 bg-cyan-500/10"
+                  : "border-slate-800 bg-slate-950/40 hover:border-slate-700"
+              }
+            `}
           >
-            <div className="flex items-center gap-2 font-semibold text-xs mb-1 text-sky-300">
-              <Sliders className="w-3.5 h-3.5 text-sky-400" />
+            <div className="flex items-center gap-2 text-cyan-300 font-semibold text-sm">
+              <SlidersHorizontal className="w-4 h-4" />
               Deep RAW Cluster Scan
             </div>
-            <p className="text-[11px] text-slate-400">
-              Direct low-level bitstream inspection across all sectors.
-            </p>
-          </div>
 
-          <div
-            onClick={() => setScanMode('quick')}
-            className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-              scanMode === 'quick'
-                ? 'bg-emerald-600/20 border-emerald-500/50 text-white shadow-sm'
-                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-            }`}
+            <p className="text-xs text-slate-400 mt-2">
+              Inspect file data for recoverable content.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            disabled={isScanning}
+            onClick={() => setScanMode("fast")}
+            className={`
+              text-left p-4 rounded-xl border transition-all
+              ${
+                scanMode === "fast"
+                  ? "border-emerald-500 bg-emerald-500/10"
+                  : "border-slate-800 bg-slate-950/40 hover:border-slate-700"
+              }
+            `}
           >
-            <div className="flex items-center gap-2 font-semibold text-xs mb-1 text-emerald-300">
-              <Play className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2 text-emerald-300 font-semibold text-sm">
+              <Zap className="w-4 h-4" />
               Fast Partition Scan
             </div>
-            <p className="text-[11px] text-slate-400">
-              Quick filesystem table & MFT index recovery.
+
+            <p className="text-xs text-slate-400 mt-2">
+              Quickly inspect the uploaded file.
             </p>
-          </div>
+          </button>
+
         </div>
 
-        {/* Progress Display or Submit Button */}
-        {isScanning ? (
-          <div className="mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-300 mb-2">
-              <span className="flex items-center gap-2 text-sky-400">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {scanStatusMessage}
-              </span>
-              <span className="text-slate-400">Sector: {currentSector}</span>
-            </div>
+        {/* Error */}
+        {error && (
+          <div className="mt-5 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+            <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
 
-            <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 transition-all duration-150"
-                style={{ width: `${scanProgress}%` }}
-              ></div>
-            </div>
+            <div>
+              <p className="text-sm font-semibold text-red-300">
+                Scan Error
+              </p>
 
-            <div className="flex justify-between items-center text-[11px] text-slate-400 mt-2 font-mono">
-              <span>SCANNING VIA API SERVICE</span>
-              <span className="font-bold text-white">{scanProgress}%</span>
+              <p className="text-xs text-red-200/80 mt-1">
+                {error}
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3">
-            {selectedFile && (
-              <button
-                onClick={() => setSelectedFile(null)}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition cursor-pointer"
-              >
-                Clear File
-              </button>
+        )}
+
+        {/* Progress */}
+        {isScanning && (
+          <div className="mt-5">
+
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-slate-400">
+                Analyzing file with RecoverIQ backend...
+              </span>
+
+              <span className="text-cyan-400 font-mono">
+                {progress}%
+              </span>
+            </div>
+
+            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex justify-end items-center gap-3 mt-6">
+
+          <button
+            type="button"
+            onClick={handleClearFile}
+            disabled={!selectedFile || isScanning}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear File
+          </button>
+
+          <button
+            type="button"
+            onClick={handleStartScan}
+            disabled={!selectedFile || isScanning}
+            className="
+              flex
+              items-center
+              gap-2
+              px-5
+              py-3
+              rounded-xl
+              font-semibold
+              text-sm
+              text-white
+              bg-gradient-to-r
+              from-cyan-500
+              to-indigo-600
+              hover:from-cyan-400
+              hover:to-indigo-500
+              disabled:opacity-40
+              disabled:cursor-not-allowed
+              shadow-lg
+              shadow-indigo-500/20
+              transition-all
+            "
+          >
+            {isScanning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Submit to API & Start Scan
+              </>
             )}
+          </button>
+
+        </div>
+
+        {/* Demo button */}
+        {!selectedFile && !isScanning && (
+          <div className="mt-4 text-right">
             <button
-              onClick={handleStartScan}
-              disabled={!selectedFile}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-xs shadow-lg transition-all ${
-                selectedFile
-                  ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:from-sky-400 hover:to-indigo-500 shadow-indigo-600/30 cursor-pointer'
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-              }`}
+              type="button"
+              onClick={createDemoFile}
+              className="text-xs text-slate-500 hover:text-cyan-400"
             >
-              <Play className="w-3.5 h-3.5" />
-              Submit to API & Start Scan
+              Load Sample Recovery File
             </button>
           </div>
         )}
+
       </div>
     </div>
   );

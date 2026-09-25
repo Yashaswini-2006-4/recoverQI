@@ -162,10 +162,35 @@ export default function ScanSummary({ scanData, onReset }) {
 
         {/* Secondary Details */}
         <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-4 mt-4 border-t border-slate-800/60">
-          <span>Total Size Scanned: <strong className="text-slate-200">{summary?.totalSize || '482.5 GB'}</strong></span>
-          <span>Recovered Data Size: <strong className="text-emerald-400">{summary?.recoveredSize || '142.8 GB'}</strong></span>
-          <span>Health Score: <strong className="text-sky-400">{summary?.healthScore || 94.8}%</strong></span>
-          <span>Scan Duration: <strong className="text-indigo-300">{summary?.scanDuration || '3m 42s'}</strong></span>
+          <span>
+  Total Size Scanned:{' '}
+  <strong className="text-slate-200">
+    {summary?.totalSize ?? '—'}
+  </strong>
+</span>
+
+<span>
+  Recovered Data Size:{' '}
+  <strong className="text-emerald-400">
+    {summary?.recoveredSize ?? '—'}
+  </strong>
+</span>
+
+<span>
+  Health Score:{' '}
+  <strong className="text-sky-400">
+    {summary?.healthScore != null
+      ? `${summary.healthScore}%`
+      : '—'}
+  </strong>
+</span>
+
+<span>
+  Scan Duration:{' '}
+  <strong className="text-indigo-300">
+    {summary?.scanDuration ?? '—'}
+  </strong>
+</span>
         </div>
       </div>
 

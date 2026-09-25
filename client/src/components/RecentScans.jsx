@@ -9,10 +9,11 @@ export default function RecentScans({ onSelectScan }) {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <History className="w-5 h-5 text-sky-400" />
-            Historical Volume Audits & Sessions
+            Sample Historical Sessions
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Browse and load previous reconstruction sessions.
+           Illustrative demo records for previously completed recovery scans.
+            These are sample sessions, not live scan history.
           </p>
         </div>
       </div>
