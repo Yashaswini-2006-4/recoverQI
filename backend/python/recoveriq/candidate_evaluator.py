@@ -22,7 +22,7 @@ FILE_SIGNATURES = {
     },
     "png": {
         "header": b"\x89PNG\r\n\x1a\n",
-        "footer": b"\x49\x45\x4E\x44\xAE\x42\x60\x82",
+        "footer": b"IEND",
     },
     "pdf": {
         "header": b"%PDF-",
