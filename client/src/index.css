@@ -2,72 +2,222 @@
 
 @layer base {
   :root {
-    --color-primary: 99 102 241;
-    --color-primary-dark: 79 70 229;
-    --color-secondary: 168 85 247;
-    --color-accent: 14 165 233;
-    --color-bg-dark: 15 23 42;
-    --color-card-dark: 30 41 59;
+    --ink: #14110F;
+    --kraft: #D8C39A;
+    --kraft-dark: #B39F73;
+    --case-red: #B33A2E;
+    --chalk: #F2EFE9;
+    --slate: #4A5560;
+    --verified: #4C7A5E;
+    --amber-flag: #C68A2E;
+
+    --font-serif: 'Fraunces', Georgia, serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
-                #0b0f19;
-    color: #e2e8f0;
+    background-color: var(--ink);
+    color: var(--chalk);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(216, 195, 154, 0.03) 0%, transparent 60%),
+      radial-gradient(circle at 85% 85%, rgba(179, 58, 46, 0.03) 0%, transparent 60%);
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Typography Helpers */
+.font-document {
+  font-family: var(--font-serif);
 }
 
-::-webkit-scrollbar-track {
-  background: #0f172a;
+.font-mono-code {
+  font-family: var(--font-mono);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #334155;
+/* Subtle Corkboard & Evidence Texture */
+.corkboard-surface {
+  background-color: #171412;
+  background-image: radial-gradient(#1f1b18 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.kraft-card {
+  background: #D8C39A;
+  color: #14110F;
+  border: 1px solid #B39F73;
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.kraft-tag {
+  background: #E8DCC2;
+  color: #14110F;
+  border: 1px solid #B39F73;
+}
+
+.ink-card {
+  background: #1C1816;
+  border: 1px solid #2F2926;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* The Signature Case-Red Pin */
+.evidence-pin {
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 35% 35%, #e65b4c 0%, #B33A2E 60%, #631b14 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  position: absolute;
+  z-index: 20;
+}
+
+.evidence-pin-top-center {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.evidence-pin-top-left {
+  top: 8px;
+  left: 8px;
+}
+
+/* Single Orchestrated Motion Moment: The Redaction Bar Lift */
+.redaction-bar {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+}
+
+.redaction-cover {
+  position: absolute;
+  inset: 0;
+  background-color: #B33A2E;
+  color: #F2EFE9;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+  transform: translateY(0%);
+}
+
+.redaction-bar.verified .redaction-cover {
+  transform: translateY(-105%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .redaction-cover {
+    transition: none !important;
+  }
+}
+
+/* Rubber Stamp Styling */
+.rubber-stamp {
+  border: 2px dashed #B33A2E;
+  color: #B33A2E;
+  font-family: var(--font-serif);
+  font-weight: 800;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  letter-spacing: 0.08em;
+  display: inline-block;
+  padding: 4px 10px;
+}
+
+.rubber-stamp-verified {
+  border: 2px solid #4C7A5E;
+  color: #4C7A5E;
+  font-family: var(--font-serif);
+  font-weight: 800;
+  transform: rotate(2deg);
+  letter-spacing: 0.06em;
+}
+
+/* Flip Tile Card for Storage Map */
+.flip-card {
+  perspective: 800px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   border-radius: 4px;
 }
 
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Manila Folder Tab Styling */
+.folder-tab {
+  position: relative;
+  border-left: 4px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+
+.folder-tab.active {
+  background: #D8C39A;
+  color: #14110F;
+  font-weight: 600;
+  border-left: 4px solid #B33A2E;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.folder-tab:not(.active) {
+  background: #1C1816;
+  color: #A39D95;
+  border-left: 4px solid #2F2926;
+}
+
+.folder-tab:not(.active):hover {
+  background: #25201D;
+  color: #F2EFE9;
+  border-left-color: #B39F73;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #14110F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2F2926;
+  border-radius: 3px;
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* Glassmorphism effects */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glow-blue {
-  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
-}
-
-.glow-indigo {
-  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.3);
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 3s infinite ease-in-out;
+  background: #4A5560;
 }

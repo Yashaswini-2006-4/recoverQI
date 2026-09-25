@@ -1,46 +1,66 @@
-import React from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, AlertCircle, ShieldAlert, Lock, Unlock } from 'lucide-react';
 
 /**
- * IntegrityBadge renders a small colored pill (green/amber/red)
- * indicating 'valid', 'partial', or 'failed' integrity state.
- *
- * @param {Object} props
- * @param {string|number} props.integrity - 'valid' | 'partial' | 'failed' | percentage/string
- * @param {string} [props.className]
+ * IntegrityBadge renders an evidence integrity marker.
+ * Unverified / lower-confidence items display a case-red redaction censor bar
+ * that lifts away with a single smooth CSS transform (300ms, no bounce).
  */
-export default function IntegrityBadge({ integrity, className = '' }) {
-  // Normalize string/status value
+export default function IntegrityBadge({ integrity, confidence = 100, className = '' }) {
   const normalized = String(integrity || '').toLowerCase();
+  const isInitiallyVerified = normalized.includes('valid') || normalized.includes('recov') || (typeof integrity === 'number' && integrity >= 95);
+  const isPartial = normalized.includes('part') || normalized.includes('warn') || (typeof integrity === 'number' && integrity < 95 && integrity >= 60);
 
-  let state = 'valid';
-  let label = 'Valid';
-  let colorStyles = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-  let Icon = CheckCircle2;
+  const [isRevealed, setIsRevealed] = useState(isInitiallyVerified);
 
-  if (normalized.includes('fail') || normalized === 'corrupt' || normalized === '0') {
-    state = 'failed';
-    label = 'Failed';
-    colorStyles = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    Icon = XCircle;
-  } else if (normalized.includes('part') || normalized.includes('warn') || (typeof integrity === 'number' && integrity < 90 && integrity >= 50)) {
-    state = 'partial';
-    label = 'Partial';
-    colorStyles = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    Icon = AlertTriangle;
-  } else if (normalized.includes('valid') || normalized.includes('recov') || (typeof integrity === 'number' && integrity >= 90)) {
-    state = 'valid';
-    label = 'Valid';
-    colorStyles = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    Icon = CheckCircle2;
+  const handleToggleRedaction = (e) => {
+    e.stopPropagation();
+    setIsRevealed(!isRevealed);
+  };
+
+  if (!isInitiallyVerified && !isPartial) {
+    // Failed or severely corrupted state
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-mono font-medium bg-[#B33A2E]/15 text-[#B33A2E] border border-[#B33A2E]/30 ${className}`}>
+        <ShieldAlert className="w-3 h-3" />
+        <span>Corrupt / Failed</span>
+      </span>
+    );
   }
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border ${colorStyles} ${className}`}
+    <div
+      onClick={handleToggleRedaction}
+      className={`redaction-bar cursor-pointer select-none rounded border overflow-hidden transition-colors ${
+        isRevealed ? 'verified' : ''
+      } ${
+        isInitiallyVerified
+          ? 'bg-[#4C7A5E]/15 text-[#4C7A5E] border-[#4C7A5E]/30'
+          : 'bg-[#C68A2E]/15 text-[#C68A2E] border-[#C68A2E]/30'
+      } ${className}`}
+      title={isRevealed ? "Click to redact" : "Click to lift redaction bar & verify hash"}
     >
-      <Icon className="w-3 h-3" />
-      <span>{label}</span>
-    </span>
+      {/* Redaction censor bar overlay */}
+      <div className="redaction-cover">
+        <span className="flex items-center gap-1 px-2 py-0.5">
+          <Lock className="w-2.5 h-2.5" /> REDACTED
+        </span>
+      </div>
+
+      {/* Real verified badge underneath */}
+      <div className="flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-mono font-medium">
+        {isInitiallyVerified ? (
+          <>
+            <Check className="w-3 h-3 text-[#4C7A5E]" />
+            <span>Verified (100%)</span>
+          </>
+        ) : (
+          <>
+            <AlertCircle className="w-3 h-3 text-[#C68A2E]" />
+            <span>Partial ECC ({confidence}%)</span>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

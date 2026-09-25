@@ -5,14 +5,13 @@ import ScanSummary from '../components/ScanSummary';
 import ArtifactTable from '../components/ArtifactTable';
 import FragmentGraph from '../components/FragmentGraph';
 import StorageMap from '../components/StorageMap';
-import RecoveryStats from '../components/RecoveryStats';
 import RecentScans from '../components/RecentScans';
 import { mockScanData } from '../data/mockData';
-import { Sparkles, GitBranch, ExternalLink, Network, Layers, HardDrive } from 'lucide-react';
+import { Tag, Pin, Network, Layers, FileText, ExternalLink, HardDrive, ShieldCheck } from 'lucide-react';
 
 export default function Dashboard({ scanResult, setScanResult }) {
   const [isScanning, setIsScanning] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeBoardView, setActiveBoardView] = useState('full');
   const navigate = useNavigate();
 
   const handleScanComplete = (apiData) => {
@@ -24,98 +23,86 @@ export default function Dashboard({ scanResult, setScanResult }) {
   };
 
   return (
-    <div className="space-y-8 max-w-full overflow-hidden">
-      {/* Top Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900/40 via-purple-900/20 to-sky-900/30 border border-indigo-500/20 p-5 sm:p-6 shadow-xl backdrop-blur-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 mt-1 sm:mt-0">
-              <Sparkles className="w-5 h-5 text-sky-400" />
+    <div className="space-y-8 max-w-full">
+      {/* Evidence Board Top Banner */}
+      <div className="ink-card rounded-lg p-6 relative border border-[#2F2926]">
+        <div className="evidence-pin evidence-pin-top-left"></div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pl-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rubber-stamp text-xs">
+                OFFICIAL CASE EVIDENCE BOARD
+              </span>
+              <span className="text-xs font-mono text-[#D8C39A]">
+                BRANCH: member-2
+              </span>
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                RecoverIQ Forensic Investigation Workspace
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                  BRANCH: member-2
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Complete investigation session: volume ingestion, greedy carving graph, digital twin storage map, & ledger.
-              </p>
-            </div>
+            <h1 className="font-document text-2xl font-bold text-[#F2EFE9] mt-2 tracking-tight">
+              Digital Forensics & Reconstruction Workspace
+            </h1>
+            <p className="text-xs text-[#A39D95] mt-1 max-w-2xl">
+              Pin raw volume dumps, analyze magic byte signatures, inspect red string fragment topologies, and verify cryptographic evidence ledgers.
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800">
-            <GitBranch className="w-3.5 h-3.5 text-sky-400" />
-            <span>origin/member-2</span>
+          <div className="flex items-center gap-2 text-xs font-mono text-[#D8C39A] bg-[#171412] px-3.5 py-2 rounded border border-[#3A332F]">
+            <Pin className="w-3.5 h-3.5 text-[#B33A2E]" />
+            <span>Active Case: #{scanResult.scanId}</span>
           </div>
         </div>
       </div>
 
-      {/* Global Metric Cards */}
-      <RecoveryStats />
-
-      {/* Step 1: File Uploader Box (Wired to mock API) */}
+      {/* 1. Evidence Vault: Drop Zone */}
       <FileUploader
         onScanComplete={handleScanComplete}
         isScanning={isScanning}
         setIsScanning={setIsScanning}
       />
 
-      {/* Step 2: Scan Summary Cards (filesDetected, filesRecovered, partialFiles, failedFiles) */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <HardDrive className="w-5 h-5 text-sky-400" />
-            Active Scan & Ledger Overview
-          </h2>
-          <button
-            onClick={() => navigate(`/results/${scanResult.scanId}`)}
-            className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
-          >
-            <span>Open Dedicated Results Page</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <ScanSummary
-          scanData={scanResult}
-          onReset={() => setScanResult(mockScanData)}
-        />
-      </div>
+      {/* 2. Scan Summary: Pinned Index Cards */}
+      <ScanSummary
+        scanData={scanResult}
+        onReset={() => setScanResult(mockScanData)}
+      />
 
-      {/* Section Mode Filter */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 className="text-base font-bold text-slate-200">Investigation Workbench Views</h3>
-        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+      {/* View Filter on the Evidence Board */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2F2926] pb-3">
+        <h3 className="font-document text-lg font-bold text-[#F2EFE9] flex items-center gap-2">
+          <Pin className="w-4 h-4 text-[#B33A2E]" />
+          Evidence Board Views
+        </h3>
+
+        <div className="flex items-center gap-1 bg-[#171412] p-1 rounded border border-[#3A332F] text-xs font-mono">
           <button
-            onClick={() => setActiveTab('all')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition ${
-              activeTab === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveBoardView('full')}
+            className={`px-3 py-1.5 rounded transition ${
+              activeBoardView === 'full' ? 'bg-[#D8C39A] text-[#14110F] font-bold' : 'text-[#A39D95] hover:text-[#F2EFE9]'
             }`}
           >
-            Full Flow (All)
+            All Evidence
           </button>
           <button
-            onClick={() => setActiveTab('table')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition ${
-              activeTab === 'table' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveBoardView('ledger')}
+            className={`px-3 py-1.5 rounded transition ${
+              activeBoardView === 'ledger' ? 'bg-[#D8C39A] text-[#14110F] font-bold' : 'text-[#A39D95] hover:text-[#F2EFE9]'
             }`}
           >
-            Artifact Ledger
+            Case Log Table
           </button>
           <button
-            onClick={() => setActiveTab('graph')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
-              activeTab === 'graph' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveBoardView('graph')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
+              activeBoardView === 'graph' ? 'bg-[#D8C39A] text-[#14110F] font-bold' : 'text-[#A39D95] hover:text-[#F2EFE9]'
             }`}
           >
             <Network className="w-3.5 h-3.5" />
-            Fragment Graph
+            Red String Graph
           </button>
           <button
-            onClick={() => setActiveTab('map')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
-              activeTab === 'map' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveBoardView('storage')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
+              activeBoardView === 'storage' ? 'bg-[#D8C39A] text-[#14110F] font-bold' : 'text-[#A39D95] hover:text-[#F2EFE9]'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -124,22 +111,22 @@ export default function Dashboard({ scanResult, setScanResult }) {
         </div>
       </div>
 
-      {/* Step 3: Artifacts Table with Previews & Downloads */}
-      {(activeTab === 'all' || activeTab === 'table') && (
+      {/* 3. Artifacts Table: Evidence Inventory */}
+      {(activeBoardView === 'full' || activeBoardView === 'ledger') && (
         <ArtifactTable artifacts={scanResult?.artifacts || []} />
       )}
 
-      {/* Step 4: Fragment Relationship Graph */}
-      {(activeTab === 'all' || activeTab === 'graph') && (
+      {/* 4. Fragment Relationship Graph: Red String on Corkboard */}
+      {(activeBoardView === 'full' || activeBoardView === 'graph') && (
         <FragmentGraph />
       )}
 
-      {/* Step 5: Storage Map (Digital Twin) */}
-      {(activeTab === 'all' || activeTab === 'map') && (
+      {/* 5. Storage Map Digital Twin: Evidence Tiles */}
+      {(activeBoardView === 'full' || activeBoardView === 'storage') && (
         <StorageMap />
       )}
 
-      {/* Step 6: Recent Scans History */}
+      {/* 6. Recent Case Dockets */}
       <RecentScans onSelectScan={handleSelectRecent} />
     </div>
   );
