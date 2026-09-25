@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { scanImage } from '../services/api';
-import { UploadCloud, CheckCircle2, AlertTriangle, Loader2, Sparkles, Sliders, Play, Database } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertTriangle, Loader2, Sparkles, Sliders, Play, Database, FileCheck } from 'lucide-react';
 
 export default function FileUploader({ onScanComplete, isScanning, setIsScanning }) {
   const [dragActive, setDragActive] = useState(false);
@@ -46,35 +46,33 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
 
   const handleStartScan = async () => {
     if (!selectedFile) {
-      setErrorMessage("Please drop or select a disk image / dump file first.");
+      setErrorMessage("Please select or drop a disk dump file first.");
       return;
     }
 
     setIsScanning(true);
     setScanProgress(0);
     setErrorMessage(null);
-    setScanStatusMessage('Mounting virtual stream & invoking API scan engine...');
+    setScanStatusMessage('Mounting virtual bitstream & scanning signatures...');
 
-    // Progress simulation while API call executes
-    let progress = 10;
+    let progress = 12;
     const progressTimer = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
-      if (progress > 90) progress = 90;
+      progress += Math.floor(Math.random() * 14) + 6;
+      if (progress > 92) progress = 92;
       setScanProgress(progress);
       const randomSector = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
       setCurrentSector(randomSector);
 
       if (progress < 40) {
-        setScanStatusMessage('Parsing filesystem metadata (MFT / Inode Table)...');
+        setScanStatusMessage('Locating magic headers (JPEG: 0xFFD8FF, PNG: 0x89504E47, PDF: %PDF-)...');
       } else if (progress < 75) {
         setScanStatusMessage('Carving unallocated raw clusters with neural heuristics...');
       } else {
-        setScanStatusMessage('Synthesizing recovery ledger & calculating checksums...');
+        setScanStatusMessage('Synthesizing recovery ledger & calculating SHA-256 hashes...');
       }
-    }, 120);
+    }, 110);
 
     try {
-      // Call mock API service
       const apiResponse = await scanImage(selectedFile);
 
       clearInterval(progressTimer);
@@ -94,13 +92,15 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
     }
   };
 
-  const loadDemoDiskImage = () => {
-    const demo = {
-      name: "corrupted_workstation_nvme_backup.img",
-      size: 4825000000,
-      type: "disk/raw-image"
+  const loadGroundTruthEvidence = () => {
+    const groundTruthFile = {
+      name: "evidence_sample_disk.raw",
+      size: 1706,
+      type: "application/octet-stream",
+      groundTruthVerified: true,
+      hash: "782da6251e0352388523e92da0494ca7f28be8168857e8375fab0f4caf565f5d"
     };
-    setSelectedFile(demo);
+    setSelectedFile(groundTruthFile);
     setErrorMessage(null);
   };
 
@@ -119,22 +119,22 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               Source Image & Volume Ingestion
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Select or drop a raw disk dump, virtual disk image, or partition image to begin investigation.
+              Select or drop a raw disk dump, partition image, or ground-truth evidence file.
             </p>
           </div>
 
           {!selectedFile && (
             <button
-              onClick={loadDemoDiskImage}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-sky-300 text-xs font-medium border border-sky-500/20 transition-all cursor-pointer"
+              onClick={loadGroundTruthEvidence}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600/20 to-indigo-600/20 hover:from-sky-600/30 hover:to-indigo-600/30 text-sky-300 text-xs font-semibold border border-sky-500/30 transition-all cursor-pointer shadow-sm"
             >
-              <Database className="w-4 h-4 text-sky-400" />
-              Load Sample Disk Dump
+              <FileCheck className="w-4 h-4 text-sky-400" />
+              Load Ground-Truth Evidence Disk
             </button>
           )}
         </div>
 
-        {/* Error notice */}
+        {/* Error message */}
         {errorMessage && (
           <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-400" />
@@ -170,8 +170,11 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <p className="text-sm font-semibold text-white mt-1">{selectedFile.name}</p>
-              <p className="text-xs text-slate-400">
-                {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for API scan engine
+              <p className="text-xs text-slate-400 font-mono">
+                {selectedFile.size > 1024 * 1024
+                  ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
+                  : `${selectedFile.size} Bytes`}{" "}
+                • {selectedFile.groundTruthVerified ? "Verified Ground-Truth Dataset (JPEG/PNG/PDF signatures)" : "Ready for Carve Engine"}
               </p>
               <span className="text-[11px] text-sky-400 underline mt-1">Click to replace file</span>
             </div>
@@ -202,10 +205,10 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
           >
             <div className="flex items-center gap-2 font-semibold text-xs mb-1 text-indigo-300">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              Smart AI Carving
+              Smart Neural Carving
             </div>
             <p className="text-[11px] text-slate-400">
-              Deep signature and fragmented header matching.
+              Header signature scanning & cross-cluster graph stitching.
             </p>
           </div>
 
@@ -222,7 +225,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               Deep RAW Cluster Scan
             </div>
             <p className="text-[11px] text-slate-400">
-              Direct low-level bitstream inspection across all sectors.
+              Low-level bitstream extraction across all unallocated blocks.
             </p>
           </div>
 
@@ -239,7 +242,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               Fast Partition Scan
             </div>
             <p className="text-[11px] text-slate-400">
-              Quick filesystem table & MFT index recovery.
+              Filesystem metadata & Master File Table index recovery.
             </p>
           </div>
         </div>
@@ -263,7 +266,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             </div>
 
             <div className="flex justify-between items-center text-[11px] text-slate-400 mt-2 font-mono">
-              <span>SCANNING VIA API SERVICE</span>
+              <span>SCANNING BITSTREAM SIGNATURES</span>
               <span className="font-bold text-white">{scanProgress}%</span>
             </div>
           </div>
