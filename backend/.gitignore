@@ -1,0 +1,23 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Pytest
+.pytest_cache/
+
+# Environment
+.env
+
+# RecoverIQ generated files
+uploads/*
+recovered/*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
