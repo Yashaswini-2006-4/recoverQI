@@ -5,7 +5,10 @@ from app.core.scanner import scan_for_signatures
 from app.core.carver import carve_files
 from app.core.fragments import create_fragments
 from app.core.reconstruction import reconstruct_by_file_type
-from app.core.storage import save_recovered_file, get_recovered_file
+from app.core.storage import (
+    save_recovered_file,
+    get_recovered_file,
+)
 
 
 router = APIRouter(
@@ -39,18 +42,27 @@ async def scan_file(file: UploadFile = File(...)):
 
 
 @router.post("/recover")
-async def recover_file(file: UploadFile = File(...)):
+async def recover_file(
+    file: UploadFile = File(...),
+):
     """
     Run the complete RecoverIQ recovery pipeline.
 
     Pipeline:
+
         Upload
-        → Signature scanning
-        → File carving
-        → Fragment creation
-        → File-type grouping
-        → Reconstruction
-        → Storage
+        ↓
+        Signature scanning
+        ↓
+        File carving
+        ↓
+        Fragment creation
+        ↓
+        Compatibility analysis
+        ↓
+        Reconstruction
+        ↓
+        Storage
     """
 
     data = await file.read()
@@ -64,13 +76,13 @@ async def recover_file(file: UploadFile = File(...)):
     # Step 1: Scan the binary data.
     signatures = scan_for_signatures(data)
 
-    # Step 2: Carve recoverable files.
+    # Step 2: Carve recoverable candidates.
     carved_files = carve_files(data)
 
-    # Step 3: Convert carved files into fragments.
+    # Step 3: Convert candidates into fragments.
     fragments = create_fragments(carved_files)
 
-    # No recoverable fragments found.
+    # No recoverable fragments.
     if not fragments:
         return {
             "filename": file.filename,
@@ -78,19 +90,40 @@ async def recover_file(file: UploadFile = File(...)):
             "original_size": len(data),
             "signatures_found": len(signatures),
             "fragments_found": 0,
+            "recovered_files": 0,
             "reconstructions": {},
             "fragments": [],
         }
 
-    # Step 4: Reconstruct each file type independently.
+    # Step 4: Reconstruct independently by file type.
     reconstructions = reconstruct_by_file_type(
         fragments
     )
 
-    # Step 5: Save each reconstructed file.
     saved_files = {}
 
     for file_type, result in reconstructions.items():
+
+        # Find fragments used by this reconstruction.
+        reconstruction_fragments = [
+            fragment
+            for fragment in fragments
+            if fragment.fragment_id
+            in result["fragment_ids"]
+        ]
+
+        # A reconstruction is complete only when
+        # all fragments in its chain are complete.
+        is_complete = all(
+            fragment.is_complete
+            for fragment in reconstruction_fragments
+        )
+
+        recovery_status = (
+            "complete"
+            if is_complete
+            else "partial"
+        )
 
         saved = save_recovered_file(
             file_type=file_type,
@@ -100,6 +133,13 @@ async def recover_file(file: UploadFile = File(...)):
         saved_files[file_type] = {
             "filename": saved["filename"],
             "size": saved["size"],
+            "recovery_status": recovery_status,
+            "confidence_score": result[
+                "confidence_score"
+            ],
+            "fragment_ids": result[
+                "fragment_ids"
+            ],
         }
 
     return {
@@ -108,22 +148,9 @@ async def recover_file(file: UploadFile = File(...)):
         "original_size": len(data),
         "signatures_found": len(signatures),
         "fragments_found": len(fragments),
+        "recovered_files": len(saved_files),
 
-        "reconstructions": {
-            file_type: {
-                "size": result["size"],
-                "confidence_score": result[
-                    "confidence_score"
-                ],
-                "fragment_ids": result[
-                    "fragment_ids"
-                ],
-                "saved_filename": saved_files[
-                    file_type
-                ]["filename"],
-            }
-            for file_type, result in reconstructions.items()
-        },
+        "reconstructions": saved_files,
 
         "fragments": [
             {
@@ -132,6 +159,7 @@ async def recover_file(file: UploadFile = File(...)):
                 "start_offset": fragment.start_offset,
                 "end_offset": fragment.end_offset,
                 "size": fragment.size,
+                "is_complete": fragment.is_complete,
             }
             for fragment in fragments
         ],
