@@ -1,3 +1,9 @@
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from app.core.fragments import Fragment
 from app.core.compatibility import (
     are_compatible,
@@ -21,82 +27,28 @@ def make_fragment(
     )
 
 
-def test_compatible_fragments():
+class TestCompatibility(unittest.TestCase):
+    def test_compatible_fragments(self):
+        first = make_fragment(1, "jpeg", 100, 200)
+        second = make_fragment(2, "jpeg", 200, 300)
+        self.assertTrue(are_compatible(first, second))
 
-    first = make_fragment(
-        1,
-        "jpeg",
-        100,
-        200
-    )
+    def test_different_file_types_are_not_compatible(self):
+        first = make_fragment(1, "jpeg", 100, 200)
+        second = make_fragment(2, "png", 200, 300)
+        self.assertFalse(are_compatible(first, second))
 
-    second = make_fragment(
-        2,
-        "jpeg",
-        200,
-        300
-    )
+    def test_overlapping_fragments_are_not_compatible(self):
+        first = make_fragment(1, "jpeg", 100, 250)
+        second = make_fragment(2, "jpeg", 200, 300)
+        self.assertFalse(are_compatible(first, second))
 
-    assert are_compatible(first, second) is True
-
-
-def test_different_file_types_are_not_compatible():
-
-    first = make_fragment(
-        1,
-        "jpeg",
-        100,
-        200
-    )
-
-    second = make_fragment(
-        2,
-        "png",
-        200,
-        300
-    )
-
-    assert are_compatible(first, second) is False
+    def test_compatibility_score(self):
+        first = make_fragment(1, "jpeg", 100, 200)
+        second = make_fragment(2, "jpeg", 200, 300)
+        score = calculate_compatibility_score(first, second)
+        self.assertEqual(score, 1.0)
 
 
-def test_overlapping_fragments_are_not_compatible():
-
-    first = make_fragment(
-        1,
-        "jpeg",
-        100,
-        250
-    )
-
-    second = make_fragment(
-        2,
-        "jpeg",
-        200,
-        300
-    )
-
-    assert are_compatible(first, second) is False
-
-
-def test_compatibility_score():
-
-    first = make_fragment(
-        1,
-        "jpeg",
-        100,
-        200
-    )
-
-    second = make_fragment(
-        2,
-        "jpeg",
-        200,
-        300
-    )
-
-    score = calculate_compatibility_score(
-        first,
-        second
-    )
-
-    assert score == 1.0
+if __name__ == "__main__":
+    unittest.main()

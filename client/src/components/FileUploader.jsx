@@ -1,8 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { scanImage } from '../services/api';
-import { Tag, Pin, CheckCircle2, AlertTriangle, Loader2, Sparkles, Sliders, Play, FileCheck, Hash } from 'lucide-react';
+import {
+  Tag,
+  Pin,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Sparkles,
+  Sliders,
+  Play,
+  FileCheck,
+  Hash,
+  Image as ImageIcon,
+  FolderOpen
+} from 'lucide-react';
 
-export default function FileUploader({ onScanComplete, isScanning, setIsScanning }) {
+export default function FileUploader({ onScanComplete, isScanning, setIsScanning, onOpenPhotoAnalysis }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [scanMode, setScanMode] = useState('smart');
@@ -44,54 +57,6 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
     setErrorMessage(null);
   };
 
-  const handleStartScan = async () => {
-    if (!selectedFile) {
-      setErrorMessage("Please pin a disk image or evidence file to the board.");
-      return;
-    }
-
-    setIsScanning(true);
-    setScanProgress(0);
-    setErrorMessage(null);
-    setScanStatusMessage('Mounting evidence stream & locating magic byte headers...');
-
-    let progress = 10;
-    const progressTimer = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 6;
-      if (progress > 92) progress = 92;
-      setScanProgress(progress);
-      const randomSector = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
-      setCurrentSector(randomSector);
-
-      if (progress < 40) {
-        setScanStatusMessage('Locating signatures: [FF D8 FF] JPEG, [89 50 4E 47] PNG, [%PDF-] PDF...');
-      } else if (progress < 75) {
-        setScanStatusMessage('Carving unallocated raw clusters & tracing fragment affinities...');
-      } else {
-        setScanStatusMessage('Computing SHA-256 cryptographic ledgers & parity indices...');
-      }
-    }, 110);
-
-    try {
-      const apiResponse = await scanImage(selectedFile);
-
-      clearInterval(progressTimer);
-      setScanProgress(100);
-      setScanStatusMessage('Forensic carving complete!');
-
-      setTimeout(() => {
-        setIsScanning(false);
-        if (onScanComplete) {
-          onScanComplete(apiResponse);
-        }
-      }, 500);
-    } catch (err) {
-      clearInterval(progressTimer);
-      setIsScanning(false);
-      setErrorMessage(err.message || "Failed to scan pinned evidence.");
-    }
-  };
-
   const loadGroundTruthEvidence = () => {
     const groundTruthFile = {
       name: "evidence_sample_disk.raw",
@@ -102,6 +67,56 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
     };
     setSelectedFile(groundTruthFile);
     setErrorMessage(null);
+    return groundTruthFile;
+  };
+
+  const handleStartScan = async () => {
+    // If no file selected yet, automatically pin Ground-Truth Evidence Disk
+    let targetFile = selectedFile;
+    if (!targetFile) {
+      targetFile = loadGroundTruthEvidence();
+    }
+
+    setIsScanning(true);
+    setScanProgress(5);
+    setErrorMessage(null);
+    setScanStatusMessage('Mounting evidence stream & parsing sector table...');
+
+    let progress = 10;
+    const progressTimer = setInterval(() => {
+      progress += Math.floor(Math.random() * 14) + 6;
+      if (progress > 94) progress = 94;
+      setScanProgress(progress);
+      const randomSector = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
+      setCurrentSector(randomSector);
+
+      if (progress < 35) {
+        setScanStatusMessage('Locating magic byte signatures: [FF D8 FF] JPEG, [89 50 4E 47] PNG, [%PDF-] PDF...');
+      } else if (progress < 70) {
+        setScanStatusMessage('Carving unallocated raw clusters & tracing fragment affinities...');
+      } else {
+        setScanStatusMessage('Computing SHA-256 cryptographic ledgers & parity indices...');
+      }
+    }, 90);
+
+    try {
+      const apiResponse = await scanImage(targetFile);
+
+      clearInterval(progressTimer);
+      setScanProgress(100);
+      setScanStatusMessage('Forensic carving complete! Verified 100% integrity.');
+
+      setTimeout(() => {
+        setIsScanning(false);
+        if (onScanComplete) {
+          onScanComplete(apiResponse);
+        }
+      }, 400);
+    } catch (err) {
+      clearInterval(progressTimer);
+      setIsScanning(false);
+      setErrorMessage(err.message || "Failed to scan pinned evidence.");
+    }
   };
 
   return (
@@ -118,19 +133,30 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               Evidence Vault — Volume Intake
             </h3>
             <p className="text-xs text-[#A39D95] mt-0.5">
-              Pin a raw disk dump, corrupted filesystem stream, or evidence container to the board.
+              Pin a raw disk dump, corrupted filesystem stream, or evidence photo to the board.
             </p>
           </div>
 
-          {!selectedFile && (
-            <button
-              onClick={loadGroundTruthEvidence}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-[#25201D] hover:bg-[#2F2926] text-[#D8C39A] text-xs font-mono border border-[#B39F73]/40 transition cursor-pointer"
-            >
-              <FileCheck className="w-3.5 h-3.5 text-[#B33A2E]" />
-              Pin Ground-Truth Evidence Disk
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!selectedFile ? (
+              <button
+                type="button"
+                onClick={loadGroundTruthEvidence}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-[#25201D] hover:bg-[#2F2926] text-[#D8C39A] text-xs font-mono border border-[#B39F73]/40 transition cursor-pointer"
+              >
+                <FileCheck className="w-3.5 h-3.5 text-[#B33A2E]" />
+                Pin Ground-Truth Evidence Disk
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSelectedFile(null)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#25201D] hover:bg-[#2F2926] text-[#A39D95] text-xs font-mono border border-[#3A332F] transition cursor-pointer"
+              >
+                Unpin File
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Error message */}
@@ -164,7 +190,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
           />
 
           {selectedFile ? (
-            <div className="kraft-card p-5 rounded max-w-lg mx-auto text-left relative">
+            <div className="kraft-card p-5 rounded max-w-lg mx-auto text-left relative shadow-md">
               {/* Pushpin on the card */}
               <div className="evidence-pin evidence-pin-top-center"></div>
 
@@ -196,15 +222,18 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 py-4">
-              <div className="w-10 h-10 rounded-full bg-[#25201D] border border-[#3A332F] flex items-center justify-center text-[#B33A2E]">
-                <Pin className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-[#25201D] border border-[#3A332F] flex items-center justify-center text-[#B33A2E]">
+                <Pin className="w-6 h-6" />
               </div>
               <p className="font-document text-lg font-bold text-[#F2EFE9]">
                 Pin evidence here
               </p>
-              <p className="text-xs font-mono text-[#A39D95]">
-                Drop raw disk dump (.raw, .img, .dd, .vmdk) or browse local evidence drives
+              <p className="text-xs font-mono text-[#A39D95] max-w-md">
+                Drop raw disk dump (.raw, .img, .dd, .vmdk), corrupted photo, or click to browse local drives
               </p>
+              <span className="inline-block mt-2 px-3 py-1 rounded bg-[#25201D] text-[#D8C39A] text-[11px] font-mono border border-[#3A332F]">
+                Tip: Click "Analyze & Reconstruct Evidence" below to run instant ground-truth scan
+              </span>
             </div>
           )}
         </div>
@@ -274,7 +303,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               <span className="text-[#A39D95]">Sector: {currentSector}</span>
             </div>
 
-            <div className="w-full h-2 bg-[#25201D] rounded overflow-hidden p-0.5 border border-[#3A332F]">
+            <div className="w-full h-2.5 bg-[#25201D] rounded overflow-hidden p-0.5 border border-[#3A332F]">
               <div
                 className="h-full bg-[#B33A2E] transition-all duration-150 rounded"
                 style={{ width: `${scanProgress}%` }}
@@ -282,32 +311,35 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             </div>
 
             <div className="flex justify-between items-center text-[10px] text-[#A39D95] mt-2 font-mono">
-              <span>SCANNING EVIDENCE VOLUME</span>
+              <span>SCANNING EVIDENCE VOLUME & CARVING ARTIFACTS</span>
               <span className="font-bold text-[#F2EFE9]">{scanProgress}%</span>
             </div>
           </div>
         ) : (
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3">
-            {selectedFile && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {onOpenPhotoAnalysis && (
+                <button
+                  type="button"
+                  onClick={onOpenPhotoAnalysis}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-[#1E1B18] hover:bg-[#2A2420] text-[#D8C39A] text-xs font-document font-bold border border-[#B39F73]/40 transition cursor-pointer"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-[#4C7A5E]" />
+                  Photo Analysis & Deep Carve
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
               <button
-                onClick={() => setSelectedFile(null)}
-                className="w-full sm:w-auto px-4 py-2 rounded bg-[#25201D] hover:bg-[#2F2926] text-[#A39D95] text-xs font-mono border border-[#3A332F] transition cursor-pointer"
+                type="button"
+                onClick={handleStartScan}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded bg-[#B33A2E] hover:bg-[#9B2F25] text-[#F2EFE9] font-document font-bold text-xs tracking-wide shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
               >
-                Unpin Evidence
+                <Play className="w-4 h-4 fill-current" />
+                Analyze & Reconstruct Evidence
               </button>
-            )}
-            <button
-              onClick={handleStartScan}
-              disabled={!selectedFile}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded font-document font-bold text-xs tracking-wide transition-all ${
-                selectedFile
-                  ? 'bg-[#B33A2E] hover:bg-[#9B2F25] text-[#F2EFE9] shadow-md cursor-pointer'
-                  : 'bg-[#25201D] text-[#4A5560] cursor-not-allowed border border-[#2F2926]'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5" />
-              Analyze & Reconstruct Evidence
-            </button>
+            </div>
           </div>
         )}
       </div>

@@ -1,12 +1,23 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Pin, Folder, FileText, Network, Layers, ShieldCheck, Tag, Terminal } from 'lucide-react';
+import {
+  Pin,
+  Folder,
+  FileText,
+  Network,
+  Layers,
+  ShieldCheck,
+  Tag,
+  Terminal,
+  Image as ImageIcon
+} from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
 
   const tabs = [
     { name: 'Evidence Vault', path: '/', icon: Tag },
+    { name: 'Photo Analysis', path: '/photo', icon: ImageIcon },
     { name: 'Reconstruction Lab', path: '/lab', icon: Network },
     { name: 'Storage Digital Twin', path: '/storage', icon: Layers },
     { name: 'Integrity Center', path: '/diagnostics', icon: ShieldCheck },
@@ -36,7 +47,7 @@ export default function Navbar() {
           </Link>
 
           {/* Manila Folder Style Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1.5">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = location.pathname === tab.path || (tab.path === '/' && location.pathname.startsWith('/results'));
@@ -44,7 +55,7 @@ export default function Navbar() {
                 <Link
                   key={tab.name}
                   to={tab.path}
-                  className={`folder-tab flex items-center gap-2 px-4 py-2 rounded-t text-xs font-mono tracking-wide ${
+                  className={`folder-tab flex items-center gap-1.5 px-3.5 py-2 rounded-t text-xs font-mono tracking-wide ${
                     isActive ? 'active' : ''
                   }`}
                 >

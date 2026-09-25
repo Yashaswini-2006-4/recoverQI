@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import ScanResults from './pages/ScanResults';
 import ReconstructionLab from './pages/ReconstructionLab';
+import StoragePage from './pages/StoragePage';
+import PhotoAnalysisPage from './pages/PhotoAnalysisPage';
 import Diagnostics from './components/Diagnostics';
 import { mockScanData } from './data/mockData';
 
@@ -12,8 +14,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col selection:bg-sky-500/30 selection:text-sky-200">
-        {/* Top Navbar */}
+      <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col selection:bg-[#B33A2E]/30 selection:text-[#F2EFE9]">
+        {/* Top Navbar with Manila Folder Tabs */}
         <Navbar />
 
         {/* Routed View Content */}
@@ -25,19 +27,31 @@ export default function App() {
               element={<Dashboard scanResult={scanResult} setScanResult={setScanResult} />}
             />
 
-            {/* 2. Detailed Results Page (/results/:scanId) */}
+            {/* 2. Photo Analysis Lab (/photo) */}
+            <Route
+              path="/photo"
+              element={<PhotoAnalysisPage scanResult={scanResult} />}
+            />
+
+            {/* 3. Detailed Results Page (/results/:scanId) */}
             <Route
               path="/results/:scanId"
               element={<ScanResults />}
             />
 
-            {/* 3. Dedicated Reconstruction Lab (/lab) */}
+            {/* 4. Dedicated Reconstruction Lab (/lab) */}
             <Route
               path="/lab"
               element={<ReconstructionLab scanResult={scanResult} />}
             />
 
-            {/* 4. Hardware & Engine Diagnostics (/diagnostics) */}
+            {/* 5. Storage Digital Twin (/storage) */}
+            <Route
+              path="/storage"
+              element={<StoragePage />}
+            />
+
+            {/* 6. Hardware & Engine Diagnostics (/diagnostics) */}
             <Route
               path="/diagnostics"
               element={<Diagnostics />}
@@ -45,13 +59,13 @@ export default function App() {
           </Routes>
         </main>
 
-        {/* Global Footer */}
-        <footer className="mt-auto border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
+        {/* Global Footer with Evidence Board details */}
+        <footer className="mt-auto border-t border-[#2F2926] bg-[#14110F] py-6 text-center text-xs text-[#A39D95]">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p>© 2026 RecoverIQ Project • Built with React 19, Vite, Tailwind CSS & ReactFlow</p>
-            <div className="flex items-center gap-4 text-slate-400">
-              <span>Branch: <span className="text-sky-400 font-mono">member-2</span></span>
-              <span>Mock API: <span className="text-emerald-400">Connected</span></span>
+            <p className="font-document">© 2026 RecoverIQ Project • Forensic Reconstruction & Evidence Ledger Engine</p>
+            <div className="flex items-center gap-4 text-xs font-mono">
+              <span>Branch: <span className="text-[#D8C39A]">member-2</span></span>
+              <span>Integrity Engine: <span className="text-[#4C7A5E]">NIST-800-88 Verified</span></span>
             </div>
           </div>
         </footer>

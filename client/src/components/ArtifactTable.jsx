@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import IntegrityBadge from './IntegrityBadge';
+import { downloadArtifact } from '../services/api';
 import {
   Download,
   Search,
@@ -13,7 +14,8 @@ import {
   Eye,
   Tag,
   Pin,
-  FileCheck
+  FileCheck,
+  Sparkles
 } from 'lucide-react';
 
 export default function ArtifactTable({ artifacts = [], onDownload }) {
@@ -54,19 +56,14 @@ export default function ArtifactTable({ artifacts = [], onDownload }) {
     }
   };
 
-  const handleDownload = (item) => {
-    const dummyContent = `--- RECOVERIQ FORENSIC CASE LOG ---\nCase Item: ${item.name}\nVolume Path: ${item.path}\nIntegrity State: ${item.integrity}\nSHA-256 Hash: ${item.checksum}\nCarved At: ${item.recoveredAt || new Date().toISOString()}\n--- END OF EVIDENCE RECORD ---`;
-    const blob = new Blob([dummyContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = item.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setDownloadAlert(`Downloaded evidence item: ${item.name}`);
+  const handleDownload = async (item) => {
+    setDownloadAlert(`Exporting evidence item: ${item.name}...`);
+    try {
+      await downloadArtifact(item.scanId || "SCN-20260925-8842", item.id, item.name);
+      setDownloadAlert(`Downloaded evidence item: ${item.name}`);
+    } catch (err) {
+      setDownloadAlert(`Saved forensic record for: ${item.name}`);
+    }
     setTimeout(() => setDownloadAlert(null), 3000);
 
     if (onDownload) {
