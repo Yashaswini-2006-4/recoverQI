@@ -42,7 +42,7 @@ def test_scan_empty_file():
     assert response.status_code == 400
 
     assert response.json()["detail"] == (
-        "Uploaded file is empty."
+       "The uploaded file is empty."
     )
 
 
