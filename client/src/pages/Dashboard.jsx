@@ -29,7 +29,19 @@ export default function Dashboard({ scanResult, setScanResult }) {
   const resultsRef = useRef(null);
   const navigate = useNavigate();
 
+  const activeScan = hasRealScan ? scanResult : null;
+
+  /**
+   * Called by FileUploader after the backend returns a successful scan.
+   */
   const handleScanComplete = (apiData) => {
+    console.log("Dashboard received scan result:", apiData);
+
+    if (!apiData || !apiData.scanId) {
+      console.error("Invalid scan response:", apiData);
+      return;
+    }
+
     setScanResult(apiData);
     setScanAlert(`Forensic Carving Complete! Case #${apiData.scanId} — ${apiData.summary?.filesRecovered || 0} files verified intact.`);
     setTimeout(() => {
@@ -42,8 +54,34 @@ export default function Dashboard({ scanResult, setScanResult }) {
     }
   };
 
+  /**
+   * Opens a completed scan.
+   */
+  const handleOpenResults = () => {
+    if (!activeScan?.scanId) {
+      return;
+    }
+
+    navigate(`/results/${activeScan.scanId}`);
+  };
+
+  /**
+   * Selects a scan from the recent scans list.
+   */
   const handleSelectRecent = (scan) => {
-    navigate(`/results/${scan.id}`);
+    const scanId = scan?.scanId || scan?.id;
+
+    if (scanId) {
+      navigate(`/results/${scanId}`);
+    }
+  };
+
+  /**
+   * Clears the current scan from the dashboard.
+   */
+  const handleReset = () => {
+    setScanResult(null);
+    setHasRealScan(false);
   };
 
   const currentArtifacts = scanResult?.artifacts || [];

@@ -23,38 +23,94 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
   const [currentSector, setCurrentSector] = useState('0x00000000');
   const [scanStatusMessage, setScanStatusMessage] = useState('Idle');
   const [errorMessage, setErrorMessage] = useState(null);
+import React, { useRef, useState } from "react";
+import {
+  Upload,
+  FileImage,
+  CheckCircle2,
+  Play,
+  Trash2,
+  Sparkles,
+  SlidersHorizontal,
+  Zap,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+
+import { scanImage } from "../services/api";
+
+export default function FileUploader({
+  onScanComplete,
+  isScanning,
+  setIsScanning,
+}) {
   const fileInputRef = useRef(null);
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [scanMode, setScanMode] = useState("smart");
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelected(e.dataTransfer.files[0]);
-    }
-  };
+  const handleFileSelect = (file) => {
+    if (!file) return;
 
-  const handleChange = (e) => {
-    e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelected(e.target.files[0]);
-    }
-  };
-
-  const handleFileSelected = (file) => {
+    setError("");
     setSelectedFile(file);
-    setScanProgress(0);
-    setErrorMessage(null);
+    setProgress(0);
+  };
+
+  const handleInputChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleChooseFile = () => {
+    if (!isScanning) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleClearFile = () => {
+    if (isScanning) return;
+
+    setSelectedFile(null);
+    setProgress(0);
+    setError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB"];
+
+    const index = Math.floor(
+      Math.log(bytes) / Math.log(1024)
+    );
+
+    const size = bytes / Math.pow(1024, index);
+
+    return `${size.toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
   };
 
   const loadGroundTruthEvidence = () => {
@@ -75,8 +131,19 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
     let targetFile = selectedFile;
     if (!targetFile) {
       targetFile = loadGroundTruthEvidence();
+    console.log("=== RecoverIQ Scan Started ===");
+
+    if (!selectedFile) {
+      setError("Please select a file first.");
+      return;
     }
 
+    if (!(selectedFile instanceof File)) {
+      setError("Invalid file. Please select the file again.");
+      return;
+    }
+
+    setError("");
     setIsScanning(true);
     setScanProgress(5);
     setErrorMessage(null);
@@ -114,6 +181,16 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
       }, 400);
     } catch (err) {
       clearInterval(progressTimer);
+
+      console.error("RecoverIQ scan error:", err);
+
+      setError(
+        err?.message ||
+          "Unable to complete the forensic scan."
+      );
+
+      setProgress(0);
+    } finally {
       setIsScanning(false);
       setErrorMessage(err.message || "Failed to scan pinned evidence.");
     }
@@ -158,6 +235,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             )}
           </div>
         </div>
+      </div>
 
         {/* Error message */}
         {errorMessage && (
@@ -169,9 +247,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
 
         {/* Drop Zone: "Pin evidence here" */}
         <div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
+          onClick={handleChooseFile}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200 relative ${
@@ -182,13 +258,6 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
               : "border-[#3A332F] bg-[#171412] hover:border-[#B39F73]/60 hover:bg-[#1C1816]"
           }`}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleChange}
-          />
-
           {selectedFile ? (
             <div className="kraft-card p-5 rounded max-w-lg mx-auto text-left relative shadow-md">
               {/* Pushpin on the card */}
@@ -255,7 +324,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             <p className="text-[11px] text-[#A39D95]">
               Magic signature scan & cross-cluster string matching.
             </p>
-          </div>
+          </button>
 
           <div
             onClick={() => setScanMode('deep')}
@@ -272,7 +341,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             <p className="text-[11px] text-[#A39D95]">
               Bitstream entropy extraction across unallocated sectors.
             </p>
-          </div>
+          </button>
 
           <div
             onClick={() => setScanMode('quick')}
@@ -289,7 +358,8 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             <p className="text-[11px] text-[#A39D95]">
               MFT index & partition table recovery.
             </p>
-          </div>
+          </button>
+
         </div>
 
         {/* Progress or Submit */}
@@ -342,6 +412,7 @@ export default function FileUploader({ onScanComplete, isScanning, setIsScanning
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
