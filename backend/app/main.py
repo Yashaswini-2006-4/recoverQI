@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.recovery_routes import router as recovery_router
 
+from app.api.recovery_routes import router as recovery_router
+
+
 app = FastAPI(
     title="RecoverIQ API",
     description="File recovery and reconstruction engine",
@@ -19,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(recovery_router)
+
 
 app.include_router(recovery_router)
 

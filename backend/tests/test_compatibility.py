@@ -2,101 +2,164 @@ from app.core.fragments import Fragment
 from app.core.compatibility import (
     are_compatible,
     calculate_compatibility_score,
+    build_compatibility_graph,
 )
 
 
-def make_fragment(
+def create_fragment(
     fragment_id,
     file_type,
     start,
-    end
+    end,
 ):
+    data = b"A" * (end - start)
+
     return Fragment(
         fragment_id=fragment_id,
         file_type=file_type,
         start_offset=start,
         end_offset=end,
         size=end - start,
-        data=b"x" * (end - start),
+        data=data,
     )
 
 
 def test_compatible_fragments():
-
-    first = make_fragment(
+    first = create_fragment(
         1,
         "jpeg",
+        0,
         100,
-        200
     )
 
-    second = make_fragment(
+    second = create_fragment(
         2,
         "jpeg",
+        100,
         200,
-        300
     )
 
-    assert are_compatible(first, second) is True
+    assert are_compatible(
+        first,
+        second,
+    )
 
 
-def test_different_file_types_are_not_compatible():
-
-    first = make_fragment(
+def test_incompatible_file_types():
+    first = create_fragment(
         1,
         "jpeg",
+        0,
         100,
-        200
     )
 
-    second = make_fragment(
+    second = create_fragment(
         2,
-        "png",
+        "pdf",
+        100,
         200,
-        300
     )
 
-    assert are_compatible(first, second) is False
+    assert not are_compatible(
+        first,
+        second,
+    )
 
 
-def test_overlapping_fragments_are_not_compatible():
-
-    first = make_fragment(
+def test_overlapping_fragments_are_incompatible():
+    first = create_fragment(
         1,
         "jpeg",
+        0,
         100,
-        250
     )
 
-    second = make_fragment(
+    second = create_fragment(
         2,
         "jpeg",
-        200,
-        300
+        50,
+        150,
     )
 
-    assert are_compatible(first, second) is False
+    assert not are_compatible(
+        first,
+        second,
+    )
 
 
 def test_compatibility_score():
-
-    first = make_fragment(
+    first = create_fragment(
         1,
         "jpeg",
+        0,
         100,
-        200
     )
 
-    second = make_fragment(
+    second = create_fragment(
         2,
         "jpeg",
+        100,
         200,
-        300
     )
 
     score = calculate_compatibility_score(
         first,
-        second
+        second,
     )
 
     assert score == 1.0
+
+
+def test_build_compatibility_graph():
+    first = create_fragment(
+        1,
+        "jpeg",
+        0,
+        100,
+    )
+
+    second = create_fragment(
+        2,
+        "jpeg",
+        100,
+        200,
+    )
+
+    third = create_fragment(
+        3,
+        "jpeg",
+        200,
+        300,
+    )
+
+    pdf = create_fragment(
+        4,
+        "pdf",
+        300,
+        400,
+    )
+
+    graph = build_compatibility_graph(
+        [
+            first,
+            second,
+            third,
+            pdf,
+        ]
+    )
+
+    assert 1 in graph
+    assert 2 in graph
+    assert 3 in graph
+    assert 4 in graph
+
+    assert graph[1][0]["fragment_id"] == 2
+    assert graph[1][0]["score"] == 1.0
+
+    assert graph[2][0]["fragment_id"] == 3
+
+    # JPEG fragments must not connect to PDF.
+    assert all(
+        edge["fragment_id"] != 4
+        for edge in graph[1]
+    )
