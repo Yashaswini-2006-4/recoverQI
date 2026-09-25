@@ -9,6 +9,7 @@ from app.core.storage import (
     save_recovered_file,
     get_recovered_file,
 )
+from app.core.integrity import build_integrity_report
 
 
 router = APIRouter(
@@ -62,6 +63,8 @@ async def recover_file(
         ↓
         Reconstruction
         ↓
+        Integrity validation
+        ↓
         Storage
     """
 
@@ -73,16 +76,15 @@ async def recover_file(
             detail="Uploaded file is empty.",
         )
 
-    # Step 1: Scan the binary data.
+    # Step 1: Scan.
     signatures = scan_for_signatures(data)
 
-    # Step 2: Carve recoverable candidates.
+    # Step 2: Carve.
     carved_files = carve_files(data)
 
-    # Step 3: Convert candidates into fragments.
+    # Step 3: Create fragments.
     fragments = create_fragments(carved_files)
 
-    # No recoverable fragments.
     if not fragments:
         return {
             "filename": file.filename,
@@ -95,16 +97,15 @@ async def recover_file(
             "fragments": [],
         }
 
-    # Step 4: Reconstruct independently by file type.
+    # Step 4: Reconstruct by file type.
     reconstructions = reconstruct_by_file_type(
         fragments
     )
 
-    saved_files = {}
+    recovered_files = {}
 
     for file_type, result in reconstructions.items():
 
-        # Find fragments used by this reconstruction.
         reconstruction_fragments = [
             fragment
             for fragment in fragments
@@ -112,8 +113,6 @@ async def recover_file(
             in result["fragment_ids"]
         ]
 
-        # A reconstruction is complete only when
-        # all fragments in its chain are complete.
         is_complete = all(
             fragment.is_complete
             for fragment in reconstruction_fragments
@@ -125,12 +124,19 @@ async def recover_file(
             else "partial"
         )
 
+        # Step 5: Integrity validation.
+        integrity = build_integrity_report(
+            file_type,
+            result["data"],
+        )
+
+        # Step 6: Save recovered file.
         saved = save_recovered_file(
             file_type=file_type,
             data=result["data"],
         )
 
-        saved_files[file_type] = {
+        recovered_files[file_type] = {
             "filename": saved["filename"],
             "size": saved["size"],
             "recovery_status": recovery_status,
@@ -140,6 +146,14 @@ async def recover_file(
             "fragment_ids": result[
                 "fragment_ids"
             ],
+            "sha256": integrity["sha256"],
+            "is_valid": integrity["is_valid"],
+            "has_valid_header": integrity[
+                "has_valid_header"
+            ],
+            "has_valid_footer": integrity[
+                "has_valid_footer"
+            ],
         }
 
     return {
@@ -148,9 +162,11 @@ async def recover_file(
         "original_size": len(data),
         "signatures_found": len(signatures),
         "fragments_found": len(fragments),
-        "recovered_files": len(saved_files),
+        "recovered_files": len(
+            recovered_files
+        ),
 
-        "reconstructions": saved_files,
+        "reconstructions": recovered_files,
 
         "fragments": [
             {

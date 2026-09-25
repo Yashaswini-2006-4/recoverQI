@@ -135,6 +135,12 @@ def test_recover_binary_file():
     assert len(jpeg["fragment_ids"]) == 1
     assert jpeg["filename"].endswith(".jpg")
 
+    # Integrity information.
+    assert len(jpeg["sha256"]) == 64
+    assert jpeg["is_valid"] is True
+    assert jpeg["has_valid_header"] is True
+    assert jpeg["has_valid_footer"] is True
+
     assert result["fragments"][0]["is_complete"] is True
 
 
@@ -169,6 +175,13 @@ def test_recover_partial_file():
     jpeg = result["reconstructions"]["jpeg"]
 
     assert jpeg["recovery_status"] == "partial"
+
+    # Partial file should have a hash,
+    # but should fail complete-file validation.
+    assert len(jpeg["sha256"]) == 64
+    assert jpeg["is_valid"] is False
+    assert jpeg["has_valid_header"] is True
+    assert jpeg["has_valid_footer"] is False
 
     assert result["fragments"][0]["is_complete"] is False
 
