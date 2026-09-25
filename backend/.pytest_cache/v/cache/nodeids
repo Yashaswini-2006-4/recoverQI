@@ -1,5 +1,0 @@
-[
-  "tests/test_carver.py::test_carve_jpeg",
-  "tests/test_carver.py::test_carve_pdf",
-  "tests/test_scanner.py::test_signature_scanner"
-]
