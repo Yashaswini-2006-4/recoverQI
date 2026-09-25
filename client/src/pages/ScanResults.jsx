@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getScanResults } from '../services/api';
+import { getScanResults, downloadReport } from '../services/api';
 import ScanSummary from '../components/ScanSummary';
 import ArtifactTable from '../components/ArtifactTable';
-import { ArrowLeft, HardDrive, Loader2, AlertCircle, FileCode, CheckCircle2, Download } from 'lucide-react';
+import { ArrowLeft, Tag, Pin, Download, FileCode, CheckCircle2, ShieldCheck, FileCheck } from 'lucide-react';
 
 export default function ScanResults() {
   const { scanId } = useParams();
@@ -12,6 +12,7 @@ export default function ScanResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showJsonModal, setShowJsonModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     async function loadResults() {
@@ -21,7 +22,7 @@ export default function ScanResults() {
         const result = await getScanResults(scanId);
         setData(result);
       } catch (err) {
-        setError(err.message || "Failed to load scan results");
+        setError(err.message || "Failed to load case docket");
       } finally {
         setLoading(false);
       }
@@ -29,27 +30,34 @@ export default function ScanResults() {
     loadResults();
   }, [scanId]);
 
+  const handleDownloadReport = async () => {
+    setIsExporting(true);
+    try {
+      await downloadReport(scanId);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
-        <p className="text-sm font-mono text-slate-400">Loading scan results for {scanId}...</p>
+        <div className="w-6 h-6 border-2 border-[#B33A2E] border-t-transparent rounded-full animate-spin"></div>
+        <p className="font-mono text-xs text-[#A39D95]">Opening forensic case docket #{scanId}...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="glass-panel p-8 rounded-2xl border border-rose-500/30 text-center max-w-lg mx-auto">
-        <AlertCircle className="w-10 h-10 text-rose-400 mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-white">Scan Result Not Found</h2>
-        <p className="text-xs text-slate-400 mt-1">{error || "Could not retrieve ledger data for this scan ID."}</p>
+      <div className="ink-card p-8 rounded-lg text-center max-w-md mx-auto border border-[#B33A2E]/40">
+        <h3 className="font-document text-lg font-bold text-[#F2EFE9]">Case Docket Not Found</h3>
+        <p className="text-xs font-mono text-[#A39D95] mt-1">{error || "Could not locate evidence records for this scan ID."}</p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+          className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded bg-[#25201D] text-[#D8C39A] text-xs font-mono"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Dashboard
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Evidence Board
         </Link>
       </div>
     );
@@ -57,60 +65,86 @@ export default function ScanResults() {
 
   return (
     <div className="space-y-6">
-      {/* Top Breadcrumb & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Dashboard
-          </Link>
+      {/* Official Case File Cover Page Block */}
+      <div className="kraft-card rounded-lg p-6 sm:p-8 relative border-2 border-[#B39F73] shadow-lg">
+        {/* Red Pushpin at top center */}
+        <div className="evidence-pin evidence-pin-top-center"></div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#B39F73] pb-4">
           <div>
-            <h1 className="text-xl font-bold text-white">
-              Scan Results: <span className="font-mono text-sky-400">{scanId}</span>
+            <div className="flex items-center gap-2">
+              <span className="rubber-stamp text-xs">
+                CASE REPORT #{scanId}
+              </span>
+              <span className="rubber-stamp-verified text-xs">
+                NIST-800-88 VERIFIED
+              </span>
+            </div>
+            <h1 className="font-document text-2xl font-bold text-[#14110F] mt-2">
+              Forensic Investigation & Artifact Docket
             </h1>
-            <p className="text-xs text-slate-400">
-              Detailed artifact inspection and cryptographic hash ledger.
+            <p className="text-xs font-mono text-[#4A5560] mt-1">
+              Cryptographic evidence ledger and cluster reconstruction records.
             </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowJsonModal(true)}
+              className="px-3 py-1.5 rounded bg-[#E8DCC2] hover:bg-[#F2EFE9] text-[#14110F] text-xs font-mono border border-[#B39F73] cursor-pointer"
+            >
+              Raw Ledger JSON
+            </button>
+            <button
+              onClick={handleDownloadReport}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 rounded bg-[#B33A2E] hover:bg-[#9B2F25] text-[#F2EFE9] text-xs font-document font-bold shadow-md cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {isExporting ? "Generating..." : "Download Full Case Report"}
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowJsonModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-300 text-xs font-mono border border-slate-700 transition cursor-pointer"
-          >
-            <FileCode className="w-3.5 h-3.5 text-indigo-400" />
-            View Raw API JSON
-          </button>
+        {/* Docket Summary Table on Kraft */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs font-mono text-[#14110F]">
+          <div className="p-2.5 bg-[#E8DCC2] rounded border border-[#B39F73]">
+            <span className="text-[10px] text-[#4A5560] uppercase block">Files Detected:</span>
+            <span className="font-bold text-sm">{data.summary?.filesDetected?.toLocaleString()}</span>
+          </div>
+          <div className="p-2.5 bg-[#E8DCC2] rounded border border-[#B39F73]">
+            <span className="text-[10px] text-[#4C7A5E] uppercase block font-bold">Verified Recovered:</span>
+            <span className="font-bold text-sm text-[#4C7A5E]">{data.summary?.filesRecovered?.toLocaleString()}</span>
+          </div>
+          <div className="p-2.5 bg-[#E8DCC2] rounded border border-[#B39F73]">
+            <span className="text-[10px] text-[#C68A2E] uppercase block font-bold">Partial Chains:</span>
+            <span className="font-bold text-sm text-[#C68A2E]">{data.summary?.partialFiles?.toLocaleString()}</span>
+          </div>
+          <div className="p-2.5 bg-[#E8DCC2] rounded border border-[#B39F73]">
+            <span className="text-[10px] text-[#B33A2E] uppercase block font-bold">Failed Clusters:</span>
+            <span className="font-bold text-sm text-[#B33A2E]">{data.summary?.failedFiles?.toLocaleString()}</span>
+          </div>
         </div>
       </div>
 
-      {/* 1. Summary Cards */}
-      <ScanSummary scanData={data} onReset={() => navigate('/')} />
-
-      {/* 2. Detailed Artifacts Table */}
-      <ArtifactTable artifacts={data?.artifacts || []} />
+      {/* Artifacts Table */}
+      <ArtifactTable artifacts={data.artifacts || []} />
 
       {/* Raw JSON Modal */}
       {showJsonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border border-slate-700 shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white font-mono flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-sky-400" />
-                API Contract JSON ({scanId})
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+          <div className="kraft-card w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg p-6 relative border-2 border-[#B39F73]">
+            <div className="evidence-pin evidence-pin-top-center"></div>
+            <div className="flex items-center justify-between pb-3 border-b border-[#B39F73]">
+              <h4 className="font-document text-base font-bold text-[#14110F]">Evidence JSON Ledger ({scanId})</h4>
               <button
                 onClick={() => setShowJsonModal(false)}
-                className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-slate-800 cursor-pointer"
+                className="text-xs font-mono px-2 py-1 rounded bg-[#C9B489] text-[#14110F] cursor-pointer"
               >
                 ✕ Close
               </button>
             </div>
-            <div className="flex-1 overflow-auto mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300">
+            <div className="flex-1 overflow-auto mt-4 p-3 rounded bg-[#14110F] border border-[#2F2926] font-mono text-[11px] text-[#D8C39A]">
               <pre>{JSON.stringify(data, null, 2)}</pre>
             </div>
           </div>

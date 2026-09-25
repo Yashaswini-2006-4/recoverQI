@@ -1,77 +1,102 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldCheck, HardDrive, Cpu, Terminal, Sparkles, Activity } from 'lucide-react';
+import {
+  Pin,
+  Folder,
+  FileText,
+  Network,
+  Layers,
+  ShieldCheck,
+  Tag,
+  Terminal,
+  Image as ImageIcon
+} from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
 
-  const isHome = location.pathname === '/' || location.pathname.startsWith('/results');
-  const isDiagnostics = location.pathname === '/diagnostics';
+  const tabs = [
+    { name: 'Evidence Vault', path: '/', icon: Tag },
+    { name: 'Photo Analysis', path: '/photo', icon: ImageIcon },
+    { name: 'Reconstruction Lab', path: '/lab', icon: Network },
+    { name: 'Storage Digital Twin', path: '/storage', icon: Layers },
+    { name: 'Integrity Center', path: '/diagnostics', icon: ShieldCheck },
+  ];
 
   return (
-    <header className="sticky top-0 z-40 glass-panel border-b border-slate-800/80 bg-slate-950/80">
+    <header className="border-b border-[#2F2926] bg-[#14110F] sticky top-0 z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand Logo & Link */}
+          {/* Brand Dossier Title */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-sky-500 to-indigo-400 text-white shadow-lg glow-indigo transition-transform group-hover:scale-105">
-              <ShieldCheck className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
+            <div className="w-8 h-8 rounded bg-[#B33A2E] flex items-center justify-center text-[#F2EFE9] shadow-md relative">
+              <Pin className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#D8C39A] border border-[#14110F]"></span>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-sky-400">
-                  Recover<span className="text-sky-400">IQ</span>
+                <span className="font-document text-xl font-bold tracking-tight text-[#F2EFE9] group-hover:text-[#D8C39A] transition-colors">
+                  Recover<span className="text-[#B33A2E]">IQ</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  v1.0-alpha
+                <span className="rubber-stamp text-[10px] py-0 px-1.5 leading-none">
+                  EVIDENCE BOARD
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Forensic File & Volume Reconstruction</p>
+              <p className="text-[10px] font-mono text-[#A39D95]">Digital Forensic Reconstruction Workbench</p>
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-            <Link
-              to="/"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                isHome
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <HardDrive className="w-4 h-4" />
-              Workspace & Scan
-            </Link>
-
-            <Link
-              to="/diagnostics"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                isDiagnostics
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <Cpu className="w-4 h-4" />
-              System Diagnostics
-            </Link>
+          {/* Manila Folder Style Navigation Tabs */}
+          <nav className="hidden md:flex items-center gap-1.5">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = location.pathname === tab.path || (tab.path === '/' && location.pathname.startsWith('/results'));
+              return (
+                <Link
+                  key={tab.name}
+                  to={tab.path}
+                  className={`folder-tab flex items-center gap-1.5 px-3.5 py-2 rounded-t text-xs font-mono tracking-wide ${
+                    isActive ? 'active' : ''
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#B33A2E]' : 'text-[#A39D95]'}`} />
+                  <span>{tab.name}</span>
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Engine Status / Branch Info */}
+          {/* Case Badge & Branch */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>API Connected</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1C1816] border border-[#2F2926] text-[#D8C39A] text-xs font-mono">
+              <span className="w-2 h-2 rounded-full bg-[#4C7A5E]"></span>
+              <span>Case Docket Active</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300 text-xs font-mono">
-              <Terminal className="w-3.5 h-3.5 text-sky-400" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1C1816] border border-[#2F2926] text-[#A39D95] text-xs font-mono">
+              <Terminal className="w-3.5 h-3.5 text-[#B33A2E]" />
               <span>member-2</span>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Folder Tabs Strip */}
+        <div className="flex md:hidden overflow-x-auto py-2 gap-1 border-t border-[#2F2926]">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = location.pathname === tab.path || (tab.path === '/' && location.pathname.startsWith('/results'));
+            return (
+              <Link
+                key={tab.name}
+                to={tab.path}
+                className={`folder-tab flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-mono ${
+                  isActive ? 'active' : ''
+                }`}
+              >
+                <Icon className={`w-3 h-3 ${isActive ? 'text-[#B33A2E]' : 'text-[#A39D95]'}`} />
+                <span>{tab.name}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </header>

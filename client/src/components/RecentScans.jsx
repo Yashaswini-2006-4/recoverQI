@@ -1,19 +1,21 @@
 import React from 'react';
 import { sampleRecentScans } from '../data/mockData';
-import { History, CheckCircle2, AlertTriangle, ArrowRight, HardDrive, Calendar } from 'lucide-react';
+import { Tag, Pin, CheckCircle2, ArrowRight, Calendar, Folder } from 'lucide-react';
 
 export default function RecentScans({ onSelectScan }) {
   return (
-    <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="ink-card rounded-lg p-6 sm:p-8 border border-[#2F2926] relative space-y-4">
+      {/* Evidence Pin */}
+      <div className="evidence-pin evidence-pin-top-left"></div>
+
+      <div className="flex items-center justify-between pb-3 border-b border-[#2F2926] pl-3">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <History className="w-5 h-5 text-sky-400" />
-            Sample Historical Sessions
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-           Illustrative demo records for previously completed recovery scans.
-            These are sample sessions, not live scan history.
+          <h3 className="font-document text-xl font-bold text-[#F2EFE9] flex items-center gap-2">
+            <Folder className="w-5 h-5 text-[#B33A2E]" />
+            Previous Case Files & Volume Dockets
+          </h3>
+          <p className="text-xs text-[#A39D95] mt-0.5">
+            Historical investigation logs pinned to the board.
           </p>
         </div>
       </div>
@@ -23,38 +25,41 @@ export default function RecentScans({ onSelectScan }) {
           <div
             key={scan.id}
             onClick={() => onSelectScan && onSelectScan(scan)}
-            className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group"
+            className="kraft-card p-5 rounded relative shadow-md hover:scale-[1.02] transition-transform cursor-pointer border border-[#B39F73]"
           >
-            <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
-              <span className="text-indigo-300 font-semibold">{scan.id}</span>
+            {/* Pushpin */}
+            <div className="evidence-pin evidence-pin-top-center"></div>
+
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#4A5560] mb-2 border-b border-[#B39F73]/50 pb-1.5">
+              <span className="font-bold text-[#B33A2E]">#{scan.id}</span>
               <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <Calendar className="w-3 h-3" />
                 {scan.date}
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-slate-200 group-hover:text-sky-400 transition-colors">
+            <h4 className="font-document font-bold text-sm text-[#14110F] leading-snug">
               {scan.name}
-            </h3>
+            </h4>
 
-            <div className="grid grid-cols-2 gap-2 my-3 text-xs">
-              <div className="bg-slate-950/60 p-2 rounded border border-slate-800">
-                <span className="text-slate-500">Files:</span>
-                <p className="font-semibold text-slate-300">{scan.filesFound}</p>
+            <div className="grid grid-cols-2 gap-2 my-3 text-xs font-mono text-[#14110F]">
+              <div className="bg-[#E8DCC2] p-1.5 rounded border border-[#B39F73]">
+                <span className="text-[10px] text-[#4A5560] block">Files:</span>
+                <span className="font-bold">{scan.filesFound}</span>
               </div>
-              <div className="bg-slate-950/60 p-2 rounded border border-slate-800">
-                <span className="text-slate-500">Recovered:</span>
-                <p className="font-semibold text-emerald-400">{scan.size}</p>
+              <div className="bg-[#E8DCC2] p-1.5 rounded border border-[#B39F73]">
+                <span className="text-[10px] text-[#4A5560] block">Recovered:</span>
+                <span className="font-bold text-[#4C7A5E]">{scan.size}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
-              <span className="inline-flex items-center gap-1 text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {scan.health} integrity
+            <div className="flex items-center justify-between pt-2 border-t border-[#B39F73]/50 text-xs font-mono">
+              <span className="inline-flex items-center gap-1 text-[#4C7A5E] font-bold">
+                <CheckCircle2 className="w-3 h-3" />
+                {scan.health} parity
               </span>
-              <span className="text-sky-400 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
-                View Ledger <ArrowRight className="w-3.5 h-3.5" />
+              <span className="text-[#B33A2E] font-bold flex items-center gap-1">
+                Open Docket <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>

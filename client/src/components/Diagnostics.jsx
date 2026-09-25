@@ -1,78 +1,84 @@
 import React from 'react';
-import { Cpu, HardDrive, ShieldCheck, Gauge, Zap, CheckCircle } from 'lucide-react';
+import { Cpu, Tag, Pin, ShieldCheck, Gauge, Zap } from 'lucide-react';
 
 export default function Diagnostics() {
   return (
     <div className="space-y-6">
-      <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-xl">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-2">
-          <Cpu className="w-5 h-5 text-indigo-400" />
-          Hardware & Engine Diagnostics
-        </h2>
-        <p className="text-xs text-slate-400 mb-6">
-          Real-time low-level I/O metrics and carve pipeline health.
-        </p>
+      <div className="ink-card rounded-lg p-6 sm:p-8 border border-[#2F2926] relative">
+        <div className="evidence-pin evidence-pin-top-left"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Memory Buffer</span>
-              <Gauge className="w-4 h-4 text-sky-400" />
-            </div>
-            <p className="text-2xl font-bold text-white mt-2">1.8 / 16 GB</p>
-            <p className="text-xs text-emerald-400 mt-1">Direct I/O zero-copy active</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-semibold uppercase">ECC Parity Accuracy</span>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            </div>
-            <p className="text-2xl font-bold text-emerald-400 mt-2">99.98%</p>
-            <p className="text-xs text-slate-400 mt-1">Reed-Solomon decoding ready</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Neural Match Engine</span>
-              <Zap className="w-4 h-4 text-amber-400" />
-            </div>
-            <p className="text-2xl font-bold text-sky-300 mt-2">v4.2-Fast</p>
-            <p className="text-xs text-slate-400 mt-1">45,000 file magic signatures</p>
-          </div>
-        </div>
-
-        {/* Simulated Sector Cluster Heatmap */}
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Cluster Sector Integrity Map (Sample Block #0x4000 - #0x5FFF)
+        <div className="pl-3">
+          <div className="flex items-center gap-2">
+            <span className="rubber-stamp text-xs">
+              INTEGRITY CENTER
             </span>
-            <span className="text-[11px] text-slate-400 font-mono">
-              <span className="inline-block w-2 h-2 rounded bg-emerald-500 mr-1"></span> Healthy &nbsp;
-              <span className="inline-block w-2 h-2 rounded bg-sky-500 mr-1"></span> Reconstructed &nbsp;
-              <span className="inline-block w-2 h-2 rounded bg-amber-500 mr-1"></span> Parity ECC
+            <span className="text-xs font-mono text-[#D8C39A]">
+              HARDWARE & ECC DIAGNOSTICS
             </span>
           </div>
-          <div className="grid grid-cols-16 sm:grid-cols-32 gap-1 p-3 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
-            {Array.from({ length: 96 }).map((_, i) => {
-              const colors = [
-                'bg-emerald-500/80',
-                'bg-emerald-400',
-                'bg-sky-500',
-                'bg-sky-400',
-                'bg-indigo-500',
-                'bg-amber-400',
-              ];
-              const color = i === 14 || i === 42 || i === 78 ? colors[5] : i % 5 === 0 ? colors[2] : colors[1];
-              return (
-                <div
-                  key={i}
-                  title={`Cluster #0x00${(i * 128).toString(16)}`}
-                  className={`h-4 rounded-[2px] ${color} opacity-90 hover:opacity-100 hover:scale-125 transition-all cursor-pointer`}
-                ></div>
-              );
-            })}
+          <h2 className="font-document text-2xl font-bold text-[#F2EFE9] mt-2">
+            Forensic Parity & Signature Validator
+          </h2>
+          <p className="text-xs text-[#A39D95] mt-1 mb-6 max-w-2xl">
+            Real-time I/O metrics, Reed-Solomon error correction validation, and raw cluster integrity logs.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="kraft-card p-4 rounded relative border border-[#B39F73]">
+              <div className="evidence-pin evidence-pin-top-center"></div>
+              <div className="flex items-center justify-between text-xs font-mono text-[#4A5560]">
+                <span className="font-semibold uppercase">Memory Buffer</span>
+                <Gauge className="w-4 h-4 text-[#14110F]" />
+              </div>
+              <p className="font-document text-2xl font-bold text-[#14110F] mt-2">1.8 / 16 GB</p>
+              <p className="text-[10px] font-mono text-[#4C7A5E] font-medium mt-1">Direct I/O zero-copy stream</p>
+            </div>
+
+            <div className="kraft-card p-4 rounded relative border border-[#B39F73]">
+              <div className="evidence-pin evidence-pin-top-center"></div>
+              <div className="flex items-center justify-between text-xs font-mono text-[#4A5560]">
+                <span className="font-semibold uppercase">ECC Parity Accuracy</span>
+                <ShieldCheck className="w-4 h-4 text-[#4C7A5E]" />
+              </div>
+              <p className="font-document text-2xl font-bold text-[#4C7A5E] mt-2">99.98%</p>
+              <p className="text-[10px] font-mono text-[#14110F] font-medium mt-1">Reed-Solomon decoding active</p>
+            </div>
+
+            <div className="kraft-card p-4 rounded relative border border-[#B39F73]">
+              <div className="evidence-pin evidence-pin-top-center"></div>
+              <div className="flex items-center justify-between text-xs font-mono text-[#4A5560]">
+                <span className="font-semibold uppercase">Signature Engine</span>
+                <Zap className="w-4 h-4 text-[#B33A2E]" />
+              </div>
+              <p className="font-document text-2xl font-bold text-[#B33A2E] mt-2">v4.2 Heuristic</p>
+              <p className="text-[10px] font-mono text-[#14110F] font-medium mt-1">45,000 magic signatures loaded</p>
+            </div>
+          </div>
+
+          {/* Sector Integrity Heatmap */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-3 text-xs font-mono text-[#A39D95]">
+              <span className="font-semibold uppercase text-[#F2EFE9]">
+                Cluster Sector Heatmap (#0x0000 - #0x5FFF)
+              </span>
+              <span className="flex items-center gap-3">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#4C7A5E]"></span> Verified</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#D8C39A]"></span> Recognized</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#B33A2E]"></span> Damaged</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-16 sm:grid-cols-32 gap-1 p-3 rounded bg-[#171412] border border-[#2F2926]">
+              {Array.from({ length: 96 }).map((_, i) => {
+                const color = i === 14 || i === 42 || i === 78 ? 'bg-[#B33A2E]' : i % 4 === 0 ? 'bg-[#D8C39A]' : 'bg-[#4C7A5E]';
+                return (
+                  <div
+                    key={i}
+                    title={`Sector #0x00${(i * 128).toString(16)}`}
+                    className={`h-4 rounded-[1px] ${color} opacity-85 hover:opacity-100 hover:scale-125 transition-all cursor-pointer`}
+                  ></div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
