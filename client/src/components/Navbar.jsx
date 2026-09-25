@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldCheck, HardDrive, Cpu, Terminal, Sparkles, Activity } from 'lucide-react';
+import { ShieldCheck, HardDrive, Cpu, Terminal, Sparkles, Network } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
 
   const isHome = location.pathname === '/' || location.pathname.startsWith('/results');
+  const isLab = location.pathname === '/lab';
   const isDiagnostics = location.pathname === '/diagnostics';
 
   return (
@@ -38,34 +39,46 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
             <Link
               to="/"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
                 isHome
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
               <HardDrive className="w-4 h-4" />
-              Workspace & Scan
+              Workspace
+            </Link>
+
+            <Link
+              to="/lab"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                isLab
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Network className="w-4 h-4" />
+              Reconstruction Lab
             </Link>
 
             <Link
               to="/diagnostics"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
                 isDiagnostics
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
               <Cpu className="w-4 h-4" />
-              System Diagnostics
+              Diagnostics
             </Link>
           </nav>
 
-          {/* Engine Status / Branch Info */}
+          {/* Status badge & member branch */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>API Mock Active</span>
+              <span>Mock Engine Connected</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300 text-xs font-mono">
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
