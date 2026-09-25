@@ -5,49 +5,43 @@ import ScanSummary from './components/ScanSummary';
 import RecentScans from './components/RecentScans';
 import Diagnostics from './components/Diagnostics';
 import RecoveryStats from './components/RecoveryStats';
-import { initialScanResults } from './data/mockData';
-import { Sparkles, Terminal, GitBranch, CheckCircle2, ArrowRight } from 'lucide-react';
+import { mockScanData } from './data/mockData';
+import { Sparkles, GitBranch } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('scan');
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState(initialScanResults);
-  const [hasScanned, setHasScanned] = useState(false);
+  const [scanResult, setScanResult] = useState(mockScanData);
 
   const handleScanComplete = (scanMeta) => {
     setScanResult({
-      ...initialScanResults,
+      ...mockScanData,
       targetDrive: `${scanMeta.fileName} (${scanMeta.fileSize})`,
-      scanDuration: '2m 18s',
       timestamp: new Date().toISOString()
     });
-    setHasScanned(true);
-  };
-
-  const handleResetScan = () => {
-    setHasScanned(false);
   };
 
   const handleSelectRecentScan = (scan) => {
     setScanResult({
-      ...initialScanResults,
+      ...mockScanData,
       scanId: scan.id,
       targetDrive: scan.name,
-      recoverableSize: scan.size,
-      healthScore: parseFloat(scan.health),
+      summary: {
+        ...mockScanData.summary,
+        recoveredSize: scan.size,
+      }
     });
-    setHasScanned(true);
     setActiveTab('scan');
   };
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col selection:bg-sky-500/30 selection:text-sky-200">
-      {/* Top Navigation */}
+      {/* Top Navigation Bar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Banner for Member-2 / Quick Status */}
+        {/* Banner for Member-2 / Status */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900/40 via-purple-900/20 to-sky-900/30 border border-indigo-500/20 p-5 sm:p-6 shadow-xl backdrop-blur-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -56,13 +50,13 @@ export default function App() {
               </div>
               <div>
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  RecoverIQ Frontend Module Active
+                  RecoverIQ UI Module Active
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
                     BRANCH: member-2
                   </span>
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  High-speed heuristic raw sector carving & disk image recovery engine UI.
+                  High-speed heuristic raw sector carving & disk image recovery engine.
                 </p>
               </div>
             </div>
@@ -77,23 +71,23 @@ export default function App() {
         {/* Global Key Metrics Overview */}
         <RecoveryStats />
 
-        {/* Tab 1: Scan & Recovery Flow */}
+        {/* Tab 1: Scan & Recovery Flow with FileUploader & ScanSummary visible */}
         {activeTab === 'scan' && (
           <div className="space-y-8 animate-fade-in">
-            {!hasScanned ? (
-              <FileUploader
-                onScanComplete={handleScanComplete}
-                isScanning={isScanning}
-                setIsScanning={setIsScanning}
-              />
-            ) : (
-              <ScanSummary
-                scanData={scanResult}
-                onReset={handleResetScan}
-              />
-            )}
+            {/* 1. File Uploader Box */}
+            <FileUploader
+              onScanComplete={handleScanComplete}
+              isScanning={isScanning}
+              setIsScanning={setIsScanning}
+            />
 
-            {/* Always show quick recent sessions below */}
+            {/* 2. Scan Summary Card with mock data */}
+            <ScanSummary
+              scanData={scanResult}
+              onReset={() => setScanResult(mockScanData)}
+            />
+
+            {/* 3. Recent Sessions */}
             <RecentScans onSelectScan={handleSelectRecentScan} />
           </div>
         )}

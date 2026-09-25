@@ -1,87 +1,83 @@
-export const initialScanResults = {
+export const mockScanData = {
   scanId: "SCN-20260925-8842",
   timestamp: "2026-09-25T14:10:00Z",
   targetDrive: "/dev/nvme0n1p2 (Corrupted Volume - NTFS)",
-  fileCountScanned: 148920,
-  recoverableCount: 1240,
-  corruptedCount: 42,
-  totalSizeScanned: "482.5 GB",
-  recoverableSize: "14.2 GB",
-  healthScore: 94.8,
-  scanDuration: "3m 42s",
-  status: "Completed",
-  categories: [
-    { name: "Documents (.pdf, .docx, .xlsx)", count: 520, size: "3.4 GB", icon: "FileText", color: "text-blue-400", bg: "bg-blue-500/10" },
-    { name: "Images (.raw, .png, .jpg)", count: 430, size: "6.8 GB", icon: "Image", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { name: "Databases & Code (.sql, .db, .js)", count: 180, size: "2.1 GB", icon: "Database", color: "text-purple-400", bg: "bg-purple-500/10" },
-    { name: "Archives & Backups (.zip, .tar.gz)", count: 110, size: "1.9 GB", icon: "Archive", color: "text-amber-400", bg: "bg-amber-500/10" },
-  ],
-  recoveredFiles: [
+  summary: {
+    filesDetected: 14892,
+    filesRecovered: 12408,
+    partialFiles: 2140,
+    failedFiles: 344,
+    totalSize: "482.5 GB",
+    recoveredSize: "142.8 GB",
+    healthScore: 94.8,
+    scanDuration: "3m 42s",
+  },
+  artifacts: [
     {
-      id: "f-101",
-      name: "financial_report_q3_2026.xlsx",
-      originalPath: "/Finance/Quarterly/financial_report_q3_2026.xlsx",
+      id: "art-101",
+      name: "financial_ledger_q3_2026.xlsx",
+      path: "/Finance/Quarterly/financial_ledger_q3_2026.xlsx",
       size: "4.8 MB",
       type: "Spreadsheet",
-      recoveryConfidence: 99.4,
-      status: "Fully Recoverable",
-      hash: "e3b0c44298fc1c149afbf4c8996fb924",
-      lastModified: "2026-09-20 11:30"
+      status: "Recovered",
+      confidence: 99.4,
+      checksum: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      recoveredAt: "2026-09-25 14:12"
     },
     {
-      id: "f-102",
-      name: "client_contracts_database.db",
-      originalPath: "/Database/Backups/client_contracts_database.db",
+      id: "art-102",
+      name: "production_cluster_backup.db",
+      path: "/Database/Backups/production_cluster_backup.db",
       size: "820.4 MB",
       type: "Database",
-      recoveryConfidence: 98.1,
-      status: "Fully Recoverable",
-      hash: "8f481a5a01ff6c92d53a232759905c14",
-      lastModified: "2026-09-24 16:45"
+      status: "Recovered",
+      confidence: 98.1,
+      checksum: "8f481a5a01ff6c92d53a232759905c1410940342938492019382049283948201",
+      recoveredAt: "2026-09-25 14:12"
     },
     {
-      id: "f-103",
-      name: "product_launch_deck_final.pdf",
-      originalPath: "/Presentations/product_launch_deck_final.pdf",
+      id: "art-103",
+      name: "product_architecture_spec.pdf",
+      path: "/Presentations/product_architecture_spec.pdf",
       size: "24.6 MB",
       type: "PDF Document",
-      recoveryConfidence: 100.0,
-      status: "Fully Recoverable",
-      hash: "4a8a08f09d37b73795649038408b5f33",
-      lastModified: "2026-09-22 09:15"
+      status: "Recovered",
+      confidence: 100.0,
+      checksum: "4a8a08f09d37b73795649038408b5f3333333333333333333333333333333333",
+      recoveredAt: "2026-09-25 14:13"
     },
     {
-      id: "f-104",
-      name: "system_audit_logs_september.tar.gz",
-      originalPath: "/Logs/system_audit_logs_september.tar.gz",
+      id: "art-104",
+      name: "server_audit_syslog.tar.gz",
+      path: "/Logs/server_audit_syslog.tar.gz",
       size: "142.1 MB",
       type: "Archive",
-      recoveryConfidence: 92.3,
-      status: "Minor Sectors Reconstructed",
-      hash: "2c6ee7ae60d2d3a1f7e034293f9c6d32",
-      lastModified: "2026-09-25 04:00"
+      status: "Partial",
+      confidence: 84.5,
+      checksum: "2c6ee7ae60d2d3a1f7e034293f9c6d32aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      recoveredAt: "2026-09-25 14:13"
     },
     {
-      id: "f-105",
-      name: "hq_keynote_master_footage.raw",
-      originalPath: "/Media/Video/hq_keynote_master_footage.raw",
-      size: "4.2 GB",
-      type: "Raw Media",
-      recoveryConfidence: 89.7,
-      status: "Partially Recoverable",
-      hash: "d41d8cd98f00b204e9800998ecf8427e",
-      lastModified: "2026-09-18 19:22"
-    },
-    {
-      id: "f-106",
-      name: "neural_weights_checkpoint_v2.bin",
-      originalPath: "/ML/Models/neural_weights_checkpoint_v2.bin",
+      id: "art-105",
+      name: "ml_model_weights_fp16.bin",
+      path: "/ML/Models/ml_model_weights_fp16.bin",
       size: "1.1 GB",
       type: "Binary Model",
-      recoveryConfidence: 97.9,
-      status: "Fully Recoverable",
-      hash: "9b74c9897bac770ffc029102a300a582",
-      lastModified: "2026-09-24 23:10"
+      status: "Recovered",
+      confidence: 97.9,
+      checksum: "9b74c9897bac770ffc029102a300a582bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      recoveredAt: "2026-09-25 14:13"
+    },
+    {
+      id: "art-106",
+      name: "unallocated_raw_block_0x8F0.raw",
+      path: "/Raw/Carved/unallocated_raw_block_0x8F0.raw",
+      size: "340.0 MB",
+      type: "Raw Bitstream",
+      status: "Failed",
+      confidence: 32.0,
+      checksum: "d41d8cd98f00b204e9800998ecf8427e00000000000000000000000000000000",
+      recoveredAt: "2026-09-25 14:13"
     }
   ]
 };
@@ -91,8 +87,8 @@ export const sampleRecentScans = [
     id: "SCN-20260925-8842",
     name: "Deep Raw Sector Scan - NVMe Drive 1",
     date: "Today, 14:10",
-    filesFound: 1240,
-    size: "14.2 GB",
+    filesFound: 14892,
+    size: "142.8 GB",
     status: "Success",
     health: "94.8%"
   },
